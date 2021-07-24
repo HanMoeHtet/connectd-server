@@ -1,0 +1,36 @@
+{
+  "validationError": {
+    "required": "{{field, capitalize}} is required.",
+    "required_plural": "{{field, capitalize}} are required.",
+    "exists": "A user with that {{field}} already exists.",
+    "invalid": "{{field, capitalize}} is invalid.",
+    "invalid_plural": "{{field, capitalize}} are invalid.",
+    "length": "{field, capitalize} must be between {{min}} and  {{max}} characters.",
+    "format": "Invalid {{field}} format.",
+    "age": "User must be at least {{min}} years old."
+  },
+  "httpError": {
+    "500": "Internal server error."
+  },
+  "verification": {
+    "email": "Verification email sent to {{email}}.",
+    "sms": "OTP sent to {{phoneNumber}}."
+  },
+  "verificationError": {
+    "email": {
+      "verified": "Email already verified."
+    },
+    "phoneNumber": {
+      "verified": "Phone number already verified."
+    },
+    "invalid": "Invalid verification. Try creating a new account.",
+    "token": {
+      "invalid": "Invalid token.",
+      "expired": "Token expired at {{date}}."
+    },
+    "otp": {
+      "incorrect": "OTP is incorrect.",
+      "expired": "OTP expired at {{date}}."
+    }
+  }
+}
