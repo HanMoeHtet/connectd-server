@@ -1,10 +1,11 @@
 export interface UserData {
   username: string;
+  avatar?: string;
   email?: string;
   emailVerifiedAt?: Date;
   phoneNumber?: string;
   phoneNumberVerifiedAt?: Date;
-  hashedPassword: string;
+  hash: string;
   birthday: Date;
   pronouns: Pronouns;
 }
@@ -51,5 +52,9 @@ export interface RegistrationError {
 }
 
 export interface EmailVerificationTokenPayload {
+  userId: string;
+}
+
+export interface AuthTokenPayload {
   userId: string;
 }

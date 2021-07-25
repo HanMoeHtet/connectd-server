@@ -2,11 +2,11 @@ import 'dotenv/config';
 import '@src/config/database';
 import '@src/services/i18next';
 import '@src/services/mail';
-import app from '@src/config/app';
+import app, { init } from '@src/config/app';
 
 import ApiRoutes from '@src/routes';
-import LocaleInspector from './middlewares/LocaleInspector';
+import localeInspector from './middlewares/LocaleInspector';
 
-app.use('/api', LocaleInspector, ApiRoutes);
+app.use('/api', localeInspector, ApiRoutes);
 
-export default app;
+init();

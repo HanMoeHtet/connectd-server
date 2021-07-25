@@ -54,12 +54,11 @@ export const verify = async (
     });
   }
 
-  phoneNumberVerification.delete();
-
   const expiredTime =
     phoneNumberVerification.createdAt.getTime() + OTP_EXPIRATION_IN_MS;
 
   if (expiredTime < Date.now()) {
+    phoneNumberVerification.delete();
     return res.status(401).json({
       message: i18next.t('verificationError.otp.expired', {
         date: new Date(expiredTime),
@@ -73,11 +72,15 @@ export const verify = async (
     });
   }
 
+  phoneNumberVerification.delete();
+
   user.phoneNumberVerifiedAt = new Date();
   await user.save();
 
   return res.status(200).json({
-    token: sign({ userId: user.id }, process.env.APP_SECRET!),
+    data: {
+      token: sign({ userId: user.id }, process.env.APP_SECRET!),
+    },
   });
 };
 
@@ -134,7 +137,7 @@ export const resend = async (
   }
 
   return res.status(201).json({
-    message: i18next.t('verification.sms', {
+    message: i18next.t('verificationSuccess.sms', {
       phoneNumber: user.phoneNumber,
     }),
     data: {

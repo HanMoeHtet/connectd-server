@@ -8,9 +8,15 @@ const UserSchema = new Schema<UserData>({
     required: true,
     unique: true,
   },
+  avatar: String,
   email: String,
+  emailVerifiedAt: Date,
   phoneNumber: String,
-  hashedPassword: String,
+  phoneNumberVerfiedAt: Date,
+  hash: {
+    type: String,
+    required: true,
+  },
   birthday: {
     type: Date,
     required: true,

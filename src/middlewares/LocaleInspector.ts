@@ -2,7 +2,7 @@ import { DEFAULT_LOCALE } from '@src/constants';
 import i18next from '@src/services/i18next';
 import { NextFunction, Request, Response } from 'express';
 
-const LocaleInspector = (req: Request, res: Response, next: NextFunction) => {
+const localeInspector = (req: Request, res: Response, next: NextFunction) => {
   const locale =
     req.cookies.locale ||
     req.query.locale ||
@@ -15,4 +15,4 @@ const LocaleInspector = (req: Request, res: Response, next: NextFunction) => {
   return next();
 };
 
-export default LocaleInspector;
+export default localeInspector;

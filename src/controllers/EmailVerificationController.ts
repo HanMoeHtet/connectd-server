@@ -61,13 +61,12 @@ export const verify = async (
     });
   }
 
-  emailVerification.delete();
-
   const expiredTime =
     emailVerification.createdAt.getTime() +
     EMAIL_VERIFICATION_TOKEN_EXPIRATION_IN_MS;
 
   if (expiredTime < Date.now()) {
+    emailVerification.delete();
     return res.status(401).json({
       message: i18next.t('verificationError.token.expired', {
         date: new Date(expiredTime),
@@ -75,11 +74,15 @@ export const verify = async (
     });
   }
 
+  emailVerification.delete();
+
   user.emailVerifiedAt = new Date();
   await user.save();
 
   return res.status(200).json({
-    token: sign({ userId }, process.env.APP_SECRET!),
+    data: {
+      token: sign({ userId }, process.env.APP_SECRET!),
+    },
   });
 };
 
@@ -130,7 +133,7 @@ export const resend = async (
   }
 
   return res.status(201).json({
-    message: i18next.t('verification.email', { email: user.email }),
+    message: i18next.t('verificationSuccess.email', { email: user.email }),
     data: {
       userId: user.id,
     },

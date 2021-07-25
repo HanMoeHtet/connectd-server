@@ -1,4 +1,4 @@
-import { BCRYPT_ROUNDS } from '@src/constants';
+import { BAD_REQUEST, BCRYPT_ROUNDS } from '@src/constants';
 import User from '@src/models/User';
 import i18next from '@src/services/i18next';
 import { sendOTP } from '@src/services/sms';
@@ -24,10 +24,22 @@ export const register = async (
 
   const { username, phoneNumber, password, birthday, pronouns } = req.body;
 
+  let hashedPassword;
+
+  try {
+    hashedPassword = await hash(password, BCRYPT_ROUNDS);
+  } catch (e) {
+    return res.status(BAD_REQUEST).json({
+      errors: {
+        password: i18next.t('validationError.invalid', { field: 'password' }),
+      },
+    });
+  }
+
   const newUser = new User({
     username,
     phoneNumber,
-    password: await hash(password, BCRYPT_ROUNDS),
+    password: hashedPassword,
     birthday,
     pronouns,
   });
@@ -51,7 +63,7 @@ export const register = async (
   }
 
   return res.status(201).json({
-    message: i18next.t('verification.sms', {
+    message: i18next.t('verificationSuccess.sms', {
       phoneNumber: newUser.phoneNumber,
     }),
     data: {

@@ -12,7 +12,7 @@
   "httpError": {
     "500": "Internal server error."
   },
-  "verification": {
+  "verificationSuccess": {
     "email": "Verification email sent to {{email}}.",
     "sms": "OTP sent to {{phoneNumber}}."
   },
@@ -32,5 +32,15 @@
       "incorrect": "OTP is incorrect.",
       "expired": "OTP expired at {{date}}."
     }
+  },
+  "logInError": {
+    "invalid": "Invalid {{field}}.",
+    "notFound": "A user with that {{field}} does not exists.",
+    "incorrectPassword": "Password is incorrect."
+  },
+  "authError": {
+    "missingHeader": "Authorization header is missing.",
+    "invalidTokenType": "Token type is invalid.",
+    "invalidToken": "Token is invalid."
   }
 }

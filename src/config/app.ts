@@ -49,8 +49,11 @@ const onListening = () => {
 };
 
 const server = http.createServer(app);
-server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+export const init = () => {
+  server.listen(port);
+};
 
 export default app;
