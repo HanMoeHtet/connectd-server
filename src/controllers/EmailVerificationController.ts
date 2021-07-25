@@ -1,4 +1,11 @@
-import { EMAIL_VERIFICATION_TOKEN_EXPIRATION_IN_MS } from '@src/constants';
+import {
+  BAD_REQUEST,
+  CONFLICT,
+  EMAIL_VERIFICATION_TOKEN_EXPIRATION_IN_MS,
+  SERVER_ERROR,
+  SUCCESS,
+  UNAUTHORIZED,
+} from '@src/constants';
 import EmailVerification from '@src/models/EmailVerification';
 import User from '@src/models/User';
 import i18next from '@src/services/i18next';
@@ -22,8 +29,8 @@ export const verify = async (
     ) as EmailVerificationTokenPayload);
   } catch (e) {
     console.error('Error verifying email token:', e);
-    return res.status(401).json({
-      message: i18next.t('verificationError.token'),
+    return res.status(BAD_REQUEST).json({
+      message: i18next.t('verificationError.token.invalid'),
     });
   }
 
@@ -32,14 +39,14 @@ export const verify = async (
     user = await User.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
-    return res.status(401).json({
-      message: i18next.t('verificationError.token'),
+    return res.status(BAD_REQUEST).json({
+      message: i18next.t('verificationError.token.invalid'),
     });
   }
 
   if (!user) {
-    return res.status(401).json({
-      message: i18next.t('verificationError.token'),
+    return res.status(BAD_REQUEST).json({
+      message: i18next.t('verificationError.token.invalid'),
     });
   }
 
@@ -50,13 +57,13 @@ export const verify = async (
     });
   } catch (e) {
     console.error('Error finding email verification:', e);
-    return res.status(401).json({
-      message: i18next.t('verificationError.token'),
+    return res.status(BAD_REQUEST).json({
+      message: i18next.t('verificationError.token.invalid'),
     });
   }
 
   if (!emailVerification) {
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.token.invalid'),
     });
   }
@@ -67,7 +74,7 @@ export const verify = async (
 
   if (expiredTime < Date.now()) {
     emailVerification.delete();
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.token.expired', {
         date: new Date(expiredTime),
       }),
@@ -79,7 +86,7 @@ export const verify = async (
   user.emailVerifiedAt = new Date();
   await user.save();
 
-  return res.status(200).json({
+  return res.status(SUCCESS).json({
     data: {
       token: sign({ userId }, process.env.APP_SECRET!),
     },
@@ -97,19 +104,19 @@ export const resend = async (
     user = await User.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
-    return res.status(401).json({
-      message: i18next.t('verificationError.token'),
+    return res.status(BAD_REQUEST).json({
+      message: i18next.t('verificationError.invalid'),
     });
   }
 
   if (!user) {
-    return res.status(401).json({
-      message: i18next.t('verificationError.token'),
+    return res.status(BAD_REQUEST).json({
+      message: i18next.t('verificationError.invalid'),
     });
   }
 
   if (user.emailVerifiedAt) {
-    return res.status(409).json({
+    return res.status(CONFLICT).json({
       message: i18next.t('verificationError.email.verified'),
     });
   }
@@ -118,7 +125,7 @@ export const resend = async (
     await EmailVerification.deleteOne({ userId });
   } catch (e) {
     console.error('Error deleting phone number verification:', e);
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
@@ -127,15 +134,12 @@ export const resend = async (
     await sendVerificationMail(user);
   } catch (e) {
     console.error('Error sending verification mail:', e);
-    return res.status(500).json({
+    return res.status(SERVER_ERROR).json({
       message: i18next.t('httpError.500'),
     });
   }
 
-  return res.status(201).json({
+  return res.status(SUCCESS).json({
     message: i18next.t('verificationSuccess.email', { email: user.email }),
-    data: {
-      userId: user.id,
-    },
   });
 };

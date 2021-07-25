@@ -1,4 +1,9 @@
-import { BAD_REQUEST, BCRYPT_ROUNDS } from '@src/constants';
+import {
+  BAD_REQUEST,
+  BCRYPT_ROUNDS,
+  CREATED,
+  SERVER_ERROR,
+} from '@src/constants';
 import User from '@src/models/User';
 import i18next from '@src/services/i18next';
 import { sendVerificationMail } from '@src/services/mail';
@@ -16,7 +21,7 @@ export const register = async (
   for (let key in errors) {
     const error = errors[key as keyof RegistrationError];
     if (error && error.length) {
-      return res.status(400).json({
+      return res.status(BAD_REQUEST).json({
         errors,
       });
     }
@@ -48,7 +53,7 @@ export const register = async (
     await newUser.save();
   } catch (e) {
     console.error('Error saving user:', e);
-    return res.status(500).json({
+    return res.status(SERVER_ERROR).json({
       message: i18next.t('httpError.500'),
     });
   }
@@ -57,12 +62,12 @@ export const register = async (
     await sendVerificationMail(newUser);
   } catch (e) {
     console.error('Error sending verification mail:', e);
-    return res.status(500).json({
+    return res.status(SERVER_ERROR).json({
       message: i18next.t('httpError.500'),
     });
   }
 
-  return res.status(201).json({
+  return res.status(CREATED).json({
     message: i18next.t('verificationSuccess.email', { email: newUser.email }),
     data: {
       userId: newUser.id,

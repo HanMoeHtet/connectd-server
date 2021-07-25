@@ -7,10 +7,11 @@
     "invalid_plural": "{{field, capitalize}} are invalid.",
     "length": "{field, capitalize} must be between {{min}} and  {{max}} characters.",
     "format": "Invalid {{field}} format.",
-    "age": "User must be at least {{min}} years old."
+    "age": "User must be at least {{min}} years old.",
+    "invalid_username": "Username must contain only English characters and space."
   },
   "httpError": {
-    "500": "Internal server error."
+    "500": "An error occurred."
   },
   "verificationSuccess": {
     "email": "Verification email sent to {{email}}.",

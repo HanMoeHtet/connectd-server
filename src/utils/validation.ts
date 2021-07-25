@@ -44,6 +44,11 @@ export const validateUsername = async (
     ];
   }
 
+  const regex = /^[a-zA-Z ]+$/;
+  if (!regex.test(username)) {
+    return [i18next.t('validationError.invalid_username', { field })];
+  }
+
   if (await checkIfUsernameExists(username)) {
     return [i18next.t('validationError.exists', { field })];
   }

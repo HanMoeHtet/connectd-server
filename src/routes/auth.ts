@@ -13,9 +13,9 @@ router.post('/verify/email', EmailVerificationController.verify);
 router.post('/resend/email', EmailVerificationController.resend);
 router.post('/login/email', EmailLoginController.logIn);
 
-router.post('/register/phone_number', PhoneNumberRegisterController.register);
-router.post('/verify/phone_number', PhoneNumberVerificationController.verify);
-router.post('/resend/phone_number', PhoneNumberVerificationController.resend);
-router.post('/login/phone_number', PhoneNumberLoginController.logIn);
+router.post('/register/phone-number', PhoneNumberRegisterController.register);
+router.post('/verify/phone-number', PhoneNumberVerificationController.verify);
+router.post('/resend/phone-number', PhoneNumberVerificationController.resend);
+router.post('/login/phone-number', PhoneNumberLoginController.logIn);
 
 export default router;

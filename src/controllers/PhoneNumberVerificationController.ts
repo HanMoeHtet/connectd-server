@@ -1,4 +1,11 @@
-import { OTP_EXPIRATION_IN_MS } from '@src/constants';
+import {
+  BAD_REQUEST,
+  CONFLICT,
+  OTP_EXPIRATION_IN_MS,
+  SERVER_ERROR,
+  SUCCESS,
+  UNAUTHORIZED,
+} from '@src/constants';
 import PhoneNumberVerification from '@src/models/PhoneNmberVerification';
 import User from '@src/models/User';
 import i18next from '@src/services/i18next';
@@ -14,7 +21,7 @@ export const verify = async (
   const { otp, userId } = req.body;
 
   if (!otp || !userId) {
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
@@ -24,13 +31,13 @@ export const verify = async (
     user = await User.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
 
   if (!user) {
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
@@ -43,13 +50,13 @@ export const verify = async (
     });
   } catch (e) {
     console.error('Error finding phone number verification:', e);
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
 
   if (!phoneNumberVerification) {
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
@@ -59,7 +66,7 @@ export const verify = async (
 
   if (expiredTime < Date.now()) {
     phoneNumberVerification.delete();
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.otp.expired', {
         date: new Date(expiredTime),
       }),
@@ -67,7 +74,7 @@ export const verify = async (
   }
 
   if (!(await compare(otp, phoneNumberVerification.hash))) {
-    return res.status(401).json({
+    return res.status(UNAUTHORIZED).json({
       message: i18next.t('verificationError.otp.incorrect'),
     });
   }
@@ -77,7 +84,7 @@ export const verify = async (
   user.phoneNumberVerifiedAt = new Date();
   await user.save();
 
-  return res.status(200).json({
+  return res.status(SUCCESS).json({
     data: {
       token: sign({ userId: user.id }, process.env.APP_SECRET!),
     },
@@ -91,7 +98,7 @@ export const resend = async (
   const { userId } = req.body;
 
   if (!userId) {
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
@@ -101,19 +108,19 @@ export const resend = async (
     user = await User.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
 
   if (!user) {
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
 
   if (user.phoneNumberVerifiedAt) {
-    return res.status(409).json({
+    return res.status(CONFLICT).json({
       message: i18next.t('verificationError.phoneNumber.verified'),
     });
   }
@@ -122,7 +129,7 @@ export const resend = async (
     await PhoneNumberVerification.deleteOne({ userId });
   } catch (e) {
     console.error('Error deleting phone number verification:', e);
-    return res.status(401).json({
+    return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
     });
   }
@@ -131,17 +138,14 @@ export const resend = async (
     await sendOTP(user);
   } catch (e) {
     console.error('Error sending OTP:', e);
-    return res.status(500).json({
+    return res.status(SERVER_ERROR).json({
       message: i18next.t('httpError.500'),
     });
   }
 
-  return res.status(201).json({
+  return res.status(SUCCESS).json({
     message: i18next.t('verificationSuccess.sms', {
       phoneNumber: user.phoneNumber,
     }),
-    data: {
-      userId: user.id,
-    },
   });
 };

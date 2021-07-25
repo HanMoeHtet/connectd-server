@@ -3,10 +3,12 @@ import http from 'http';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import cors from 'cors';
 
 const app = express();
 const debug = Debugger('app:server');
 
+app.use(cors({ origin: process.env.CLIENT_ORIGIN! }));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
