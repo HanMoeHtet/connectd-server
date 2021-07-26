@@ -1,9 +1,18 @@
 import { AuthResponse } from '@src/types/responses';
-import { prepareUserResponse } from '@src/utils/profile';
+import {
+  prepareProfileResponse,
+  prepareBasicProfileResponse,
+} from '@src/utils/profile';
 import { Request } from 'express';
 
-export const show = (req: Request, res: AuthResponse) => {
+export const getProfile = (req: Request, res: AuthResponse) => {
   return res.json({
-    data: prepareUserResponse(res.locals.user),
+    data: prepareProfileResponse(res.locals.user),
+  });
+};
+
+export const getBasicProfile = (req: Request, res: AuthResponse) => {
+  return res.json({
+    data: prepareBasicProfileResponse(res.locals.user),
   });
 };

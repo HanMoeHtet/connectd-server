@@ -1,6 +1,6 @@
 import { User } from '@src/models/User';
 
-export const prepareUserResponse = (user: User) => {
+export const prepareProfileResponse = (user: User) => {
   const { id, username, avatar, email, phoneNumber, birthday, pronouns } = user;
 
   return {
@@ -11,5 +11,15 @@ export const prepareUserResponse = (user: User) => {
     phoneNumber,
     birthday,
     pronouns,
+  };
+};
+
+export const prepareBasicProfileResponse = (user: User) => {
+  const { id, username, avatar } = user;
+
+  return {
+    id,
+    username,
+    avatar,
   };
 };
