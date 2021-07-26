@@ -28,9 +28,11 @@ const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  const { userId } = verify(token, process.env.APP_SECRET!) as AuthTokenPayload;
+  let userId;
 
-  if (!userId) {
+  try {
+    ({ userId } = verify(token, process.env.APP_SECRET!) as AuthTokenPayload);
+  } catch (e) {
     return res.status(BAD_REQUEST).json({
       message: i18next.t('authError.invalidToken'),
     });

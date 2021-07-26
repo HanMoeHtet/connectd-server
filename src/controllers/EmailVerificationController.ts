@@ -20,7 +20,7 @@ export const verify = async (
 ) => {
   const { token } = req.body;
 
-  let userId: string;
+  let userId;
 
   try {
     ({ userId } = verifyJwt(

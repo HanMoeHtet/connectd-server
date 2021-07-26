@@ -52,9 +52,9 @@ export interface RegistrationError {
 }
 
 export interface EmailVerificationTokenPayload {
-  userId: string;
+  userId?: string;
 }
 
 export interface AuthTokenPayload {
-  userId: string;
+  userId?: string;
 }
