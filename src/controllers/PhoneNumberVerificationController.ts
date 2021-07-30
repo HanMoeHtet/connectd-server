@@ -125,12 +125,6 @@ export const resend = async (
     });
   }
 
-  if (user.phoneNumberVerifiedAt) {
-    return res.status(CONFLICT).json({
-      message: i18next.t('verificationError.phoneNumber.verified'),
-    });
-  }
-
   try {
     await PhoneNumberVerification.deleteOne({ userId });
   } catch (e) {
