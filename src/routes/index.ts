@@ -2,11 +2,13 @@ import { Router } from 'express';
 import authRoutes from './auth';
 import profileRoutes from './profile';
 import newsfeedRoutes from './newsfeed';
+import userRoutes from './user';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/profile', profileRoutes);
 router.use('/newsfeed', newsfeedRoutes);
+router.use('/users', userRoutes);
 
 export default router;

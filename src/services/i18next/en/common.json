@@ -11,7 +11,8 @@
     "invalid_username": "Username must contain only English characters and space."
   },
   "httpError": {
-    "500": "An error occurred."
+    "500": "An error occurred.",
+    "404": "Not found."
   },
   "verificationSuccess": {
     "email": "Verification email sent to {{email}}.",
@@ -37,5 +38,7 @@
     "missingHeader": "Authorization header is missing.",
     "invalidTokenType": "Token type is invalid.",
     "invalidToken": "Token is invalid."
-  }
+  },
+  "missing": "No {{field}} provided.",
+  "notFound": "{{field, capitalize}} not found."
 }

@@ -11,7 +11,7 @@ const clear = async () => {
   Post;
 };
 
-const seedPost = async (userId: string) => {
+const seedPost = async (userId: string): Promise<string> => {
   const post = new Post({
     userId,
     privacy: 0,
@@ -19,22 +19,23 @@ const seedPost = async (userId: string) => {
   });
 
   await post.save();
+  return post.id;
 };
 
-const seedPosts = async (size: number = 20) => {
-  const userIds = (await User.find({}, { id: true }).exec()).map((u) => u.id);
-  await Promise.all(
+const seedPosts = async (
+  size: number = 20,
+  userId: string
+): Promise<string[]> => {
+  const postIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(async () => {
-        const userId = userIds[Math.floor(Math.random() * userIds.length)];
-        await seedPost(userId);
-      })
+      .map(async () => await seedPost(userId))
   );
   console.log(`${size} posts created.`);
+  return postIds;
 };
 
-const seedUser = async () => {
+const seedUser = async (): Promise<string> => {
   const gender = Math.floor(Math.random() * 2);
 
   const user = new User({
@@ -49,28 +50,33 @@ const seedUser = async () => {
       possessive: ['his', 'her'][gender],
     },
   });
+
+  user.postIds = await seedPosts(10, user.id);
+
   await user.save();
+
+  return user.id;
 };
 
 const seedUsers = async (size: number = 10) => {
-  await Promise.all(Array(size).fill(0).map(seedUser));
+  const userIds = await Promise.all(Array(size).fill(0).map(seedUser));
   console.log(`${size} users created.`);
+  return userIds;
 };
 
 const run = async () => {
   const [cmd, ...rest] = process.argv.slice(2);
+  await init();
   switch (cmd) {
     case 'clean':
       await clear();
       break;
     case 'seed':
       await seedUsers(10);
-      await seedPosts(20);
       break;
     case 'refresh':
       await clear();
       await seedUsers(10);
-      await seedPosts(20);
       break;
     default:
       console.log(`Unknown argument: ${cmd}`);

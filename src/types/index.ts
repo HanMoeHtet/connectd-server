@@ -7,12 +7,6 @@ export interface UnverifiedUserData {
   pronouns: Pronouns;
 }
 
-export interface UserData extends UnverifiedUserData {
-  avatar?: string;
-  emailVerifiedAt?: Date;
-  phoneNumberVerifiedAt?: Date;
-}
-
 export interface EmailVerificationData {
   userId: string;
   createdAt: Date;

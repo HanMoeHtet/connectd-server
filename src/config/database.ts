@@ -6,6 +6,8 @@ db.once('open', function () {
   console.log('DB connected');
 });
 
+mongoose.set('debug', true);
+
 export const init = async () => {
   await mongoose.connect(process.env.MONGODB_URL!, {
     useNewUrlParser: true,

@@ -1,6 +1,15 @@
 import { model, Schema } from '@src/config/database';
-import { UserData } from '@src/types';
-import { Document, Model } from 'mongoose';
+import { UnverifiedUserData } from '@src/types';
+import { Post } from '@src/types/Post';
+import { Document, Model, PopulatedDoc } from 'mongoose';
+
+export interface UserData extends UnverifiedUserData {
+  avatar?: string;
+  postIds: string[];
+  emailVerifiedAt?: Date;
+  phoneNumberVerifiedAt?: Date;
+  posts?: PopulatedDoc<Post & Document>;
+}
 
 const UserSchema = new Schema<UserData>({
   username: {
@@ -33,6 +42,15 @@ const UserSchema = new Schema<UserData>({
     },
   ],
 });
+
+UserSchema.virtual('posts', {
+  ref: 'Post',
+  localField: 'postIds',
+  foreignField: '_id',
+});
+
+UserSchema.set('toObject', { virtuals: true });
+UserSchema.set('toJSON', { virtuals: true });
 
 const User: Model<UserData> = model<UserData>('User', UserSchema);
 
