@@ -4,7 +4,7 @@ import {
   CREATED,
   SERVER_ERROR,
 } from '@src/constants';
-import User from '@src/models/User';
+import UnverifiedUser from '@src/models/UnverifiedUser';
 import i18next from '@src/services/i18next';
 import { sendVerificationMail } from '@src/services/mail';
 import { EmailRegistrationFormData, RegistrationError } from '@src/types';
@@ -41,7 +41,9 @@ export const register = async (
     });
   }
 
-  const newUser = new User({
+  await UnverifiedUser.deleteOne({ email });
+
+  const newUser = new UnverifiedUser({
     username,
     email,
     hash: hashedPassword,

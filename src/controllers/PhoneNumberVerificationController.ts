@@ -7,6 +7,7 @@ import {
   UNAUTHORIZED,
 } from '@src/constants';
 import PhoneNumberVerification from '@src/models/PhoneNmberVerification';
+import UnverifiedUser from '@src/models/UnverifiedUser';
 import User from '@src/models/User';
 import i18next from '@src/services/i18next';
 import { sendOTP } from '@src/services/sms';
@@ -28,7 +29,7 @@ export const verify = async (
 
   let user;
   try {
-    user = await User.findById(userId);
+    user = await UnverifiedUser.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
     return res.status(BAD_REQUEST).json({
@@ -79,10 +80,15 @@ export const verify = async (
     });
   }
 
-  phoneNumberVerification.delete();
+  const verifiedUser = new User({
+    ...user.toJSON(),
+  });
 
-  user.phoneNumberVerifiedAt = new Date();
-  await user.save();
+  await user.delete();
+  await phoneNumberVerification.delete();
+
+  verifiedUser.phoneNumberVerifiedAt = new Date();
+  await verifiedUser.save();
 
   return res.status(SUCCESS).json({
     data: {
@@ -105,7 +111,7 @@ export const resend = async (
 
   let user;
   try {
-    user = await User.findById(userId);
+    user = await UnverifiedUser.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
     return res.status(BAD_REQUEST).json({

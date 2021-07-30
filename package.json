@@ -5,7 +5,8 @@
   "scripts": {
     "start": "tsc && node -r ./tsconfig-paths-bootstrap.js ./build/index.js",
     "dev": "ts-node-dev -r tsconfig-paths/register ./src/index.ts",
-    "seed": "ts-node -r tsconfig-paths/register ./scripts/seed.ts",
+    "db:seed": "ts-node -r tsconfig-paths/register ./scripts/db.ts",
+    "db:clean": "ts-node -r tsconfig-paths/register ./scripts/db.ts clean",
     "stage": "npm run start",
     "prod": "npm run start"
   },

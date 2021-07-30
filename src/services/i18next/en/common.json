@@ -18,12 +18,6 @@
     "sms": "OTP sent to {{phoneNumber}}."
   },
   "verificationError": {
-    "email": {
-      "verified": "Email already verified."
-    },
-    "phoneNumber": {
-      "verified": "Phone number already verified."
-    },
     "invalid": "Invalid verification. Try creating a new account.",
     "token": {
       "invalid": "Invalid token.",

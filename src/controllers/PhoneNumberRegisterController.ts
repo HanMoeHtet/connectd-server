@@ -1,5 +1,5 @@
 import { BAD_REQUEST, BCRYPT_ROUNDS } from '@src/constants';
-import User from '@src/models/User';
+import UnverifiedUser from '@src/models/UnverifiedUser';
 import i18next from '@src/services/i18next';
 import { sendOTP } from '@src/services/sms';
 import { PhoneNumberRegistrationFormData, RegistrationError } from '@src/types';
@@ -36,7 +36,9 @@ export const register = async (
     });
   }
 
-  const newUser = new User({
+  await UnverifiedUser.deleteOne({ phoneNumber });
+
+  const newUser = new UnverifiedUser({
     username,
     phoneNumber,
     password: hashedPassword,

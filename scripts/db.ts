@@ -58,10 +58,23 @@ const seedUsers = async (size: number = 10) => {
 };
 
 const run = async () => {
-  await init();
-  await clear();
-  await seedUsers();
-  await seedPosts();
+  const [cmd, ...rest] = process.argv.slice(2);
+  switch (cmd) {
+    case 'clean':
+      await clear();
+      break;
+    case 'seed':
+      await seedUsers(10);
+      await seedPosts(20);
+      break;
+    case 'refresh':
+      await clear();
+      await seedUsers(10);
+      await seedPosts(20);
+      break;
+    default:
+      console.log(`Unknown argument: ${cmd}`);
+  }
   process.exit(0);
 };
 

@@ -7,6 +7,7 @@ import {
   UNAUTHORIZED,
 } from '@src/constants';
 import EmailVerification from '@src/models/EmailVerification';
+import UnverifiedUser from '@src/models/UnverifiedUser';
 import User from '@src/models/User';
 import i18next from '@src/services/i18next';
 import { sendVerificationMail } from '@src/services/mail';
@@ -36,7 +37,7 @@ export const verify = async (
 
   let user;
   try {
-    user = await User.findById(userId);
+    user = await UnverifiedUser.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
     return res.status(BAD_REQUEST).json({
@@ -81,10 +82,15 @@ export const verify = async (
     });
   }
 
-  emailVerification.delete();
+  const verifiedUser = new User({
+    ...user.toJSON(),
+  });
 
-  user.emailVerifiedAt = new Date();
-  await user.save();
+  await user.delete();
+  await emailVerification.delete();
+
+  verifiedUser.emailVerifiedAt = new Date();
+  await verifiedUser.save();
 
   return res.status(SUCCESS).json({
     data: {
@@ -101,7 +107,7 @@ export const resend = async (
 
   let user;
   try {
-    user = await User.findById(userId);
+    user = await UnverifiedUser.findById(userId);
   } catch (e) {
     console.error('Error finding user:', e);
     return res.status(BAD_REQUEST).json({
@@ -112,12 +118,6 @@ export const resend = async (
   if (!user) {
     return res.status(BAD_REQUEST).json({
       message: i18next.t('verificationError.invalid'),
-    });
-  }
-
-  if (user.emailVerifiedAt) {
-    return res.status(CONFLICT).json({
-      message: i18next.t('verificationError.email.verified'),
     });
   }
 

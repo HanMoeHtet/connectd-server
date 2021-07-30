@@ -1,13 +1,16 @@
-export interface UserData {
+export interface UnverifiedUserData {
   username: string;
-  avatar?: string;
   email?: string;
-  emailVerifiedAt?: Date;
   phoneNumber?: string;
-  phoneNumberVerifiedAt?: Date;
   hash: string;
   birthday: Date;
   pronouns: Pronouns;
+}
+
+export interface UserData extends UnverifiedUserData {
+  avatar?: string;
+  emailVerifiedAt?: Date;
+  phoneNumberVerifiedAt?: Date;
 }
 
 export interface EmailVerificationData {
