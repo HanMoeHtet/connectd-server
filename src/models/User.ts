@@ -1,6 +1,6 @@
 import { model, Schema } from '@src/config/database';
 import { UserData } from '@src/types';
-import { Document } from 'mongoose';
+import { Document, Model } from 'mongoose';
 
 const UserSchema = new Schema<UserData>({
   username: {
@@ -26,10 +26,16 @@ const UserSchema = new Schema<UserData>({
     objective: { type: String, required: true },
     possessive: { type: String, required: true },
   },
+  postIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Post',
+    },
+  ],
 });
 
-const User = model<UserData>('User', UserSchema);
+const User: Model<UserData> = model<UserData>('User', UserSchema);
 
-export type User = UserData & Document<any, any, UserData>;
+export type UserDocument = UserData & Document<any, any, UserData>;
 
 export default User;

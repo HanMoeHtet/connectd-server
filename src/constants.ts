@@ -25,3 +25,6 @@ export const NOT_FOUND = 404;
 export const CONFLICT = 409;
 export const GONE = 410;
 export const SERVER_ERROR = 500;
+
+// Limits
+export const MAX_POSTS_PER_PAGE = 10;

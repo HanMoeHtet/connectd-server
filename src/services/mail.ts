@@ -1,5 +1,5 @@
 import EmailVerification from '@src/models/EmailVerification';
-import { User } from '@src/models/User';
+import { UserDocument } from '@src/models/User';
 import { sign } from 'jsonwebtoken';
 import { createTransport } from 'nodemailer';
 import { MailOptions } from 'nodemailer/lib/json-transport';
@@ -60,7 +60,7 @@ const getHTMLForVerificationMail = (
   </html>`;
 };
 
-export const sendVerificationMail = async (user: User) => {
+export const sendVerificationMail = async (user: UserDocument) => {
   const emailVerification = new EmailVerification({
     userId: user.id,
   });

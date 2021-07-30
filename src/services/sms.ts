@@ -1,5 +1,5 @@
 import { BCRYPT_ROUNDS, OTP_LENGTH } from '@src/constants';
-import { User } from '@src/models/User';
+import { UserDocument } from '@src/models/User';
 import Twilio from 'twilio';
 import { hash } from 'bcrypt';
 import PhoneNumberVerification from '@src/models/PhoneNmberVerification';
@@ -44,7 +44,7 @@ const getOTPMessageTemplate = (otp: string) => {
   `;
 };
 
-export const sendOTP = async (user: User) => {
+export const sendOTP = async (user: UserDocument) => {
   const otp = Array(OTP_LENGTH)
     .fill(0)
     .map((_) => Math.floor(Math.random() * 10))
