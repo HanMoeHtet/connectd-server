@@ -3,6 +3,7 @@ import { UserDocument } from '@src/models/User';
 import Twilio from 'twilio';
 import { hash } from 'bcrypt';
 import PhoneNumberVerification from '@src/models/PhoneNmberVerification';
+import { UnverifiedUserDocument } from '@src/models/UnverifiedUser';
 
 const accountSid =
   process.env.TWILIO_ACCOUNT_SID! || 'ACc0ce95d9a202822f2e835203dc906bc4';
@@ -44,7 +45,7 @@ const getOTPMessageTemplate = (otp: string) => {
   `;
 };
 
-export const sendOTP = async (user: UserDocument) => {
+export const sendOTP = async (user: UnverifiedUserDocument) => {
   const otp = Array(OTP_LENGTH)
     .fill(0)
     .map((_) => Math.floor(Math.random() * 10))

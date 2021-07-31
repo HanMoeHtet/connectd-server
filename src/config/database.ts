@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { register } from '@src/models';
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -13,6 +14,9 @@ export const init = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+
+  register();
+  console.log(db.models);
 };
 
 export const { Schema, model } = mongoose;

@@ -1,5 +1,10 @@
 import { model, Schema } from '@src/config/database';
-import { Share } from '@src/types/Post';
+import { Document } from 'mongoose';
+
+export interface Share {
+  userId: string;
+  createdAt: Date;
+}
 
 const ShareSchema = new Schema<Share>({
   userId: {
@@ -12,6 +17,8 @@ const ShareSchema = new Schema<Share>({
   },
 });
 
-const Share = model<Share>('Share', ShareSchema);
+export const ShareModel = model<Share>('Share', ShareSchema);
 
-export default Share;
+export type ShareDocument = Share & Document<any, any, Share>;
+
+export default ShareModel;

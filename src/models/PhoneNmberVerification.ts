@@ -1,6 +1,11 @@
 import { model, Schema } from '@src/config/database';
-import { PhoneNumberVerificationData } from '@src/types';
 import { Document } from 'mongoose';
+
+export interface PhoneNumberVerificationData {
+  userId: string;
+  hash: string;
+  createdAt: Date;
+}
 
 const PhoneNumberVerificationSchema = new Schema<PhoneNumberVerificationData>({
   userId: {

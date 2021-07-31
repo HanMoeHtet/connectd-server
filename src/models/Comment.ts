@@ -1,9 +1,40 @@
 import { model, Schema } from '@src/config/database';
-import { Comment } from '@src/types/Post';
-import { ReplySchema } from './Reply';
+import { Document, PopulatedDoc } from 'mongoose';
+import { ReplyDocument } from './Reply';
 
-const CommentSchema = new Schema<Comment>({
-  ...ReplySchema.obj,
+export interface Comment {
+  userId: string;
+  postId: string;
+  createdAt: Date;
+  content: string;
+  reactionIds: string[];
+  replyIds: string[];
+  replies: PopulatedDoc<ReplyDocument>[];
+}
+
+export const CommentSchema = new Schema<Comment>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  postId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Post',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  content: {
+    type: String,
+    requred: true,
+  },
+  reactionIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Reaction',
+    },
+  ],
   replyIds: [
     {
       type: Schema.Types.ObjectId,
@@ -12,6 +43,14 @@ const CommentSchema = new Schema<Comment>({
   ],
 });
 
-const Comment = model<Comment>('Comment', CommentSchema);
+CommentSchema.virtual('replies', {
+  ref: 'Reply',
+  localField: 'replyIds',
+  foreignField: '_id',
+});
 
-export default Comment;
+export const CommentModel = model<Comment>('Comment', CommentSchema);
+
+export type CommentDocument = Comment & Document<any, any, Comment>;
+
+export default CommentModel;

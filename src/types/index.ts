@@ -1,23 +1,3 @@
-export interface UnverifiedUserData {
-  username: string;
-  email?: string;
-  phoneNumber?: string;
-  hash: string;
-  birthday: Date;
-  pronouns: Pronouns;
-}
-
-export interface EmailVerificationData {
-  userId: string;
-  createdAt: Date;
-}
-
-export interface PhoneNumberVerificationData {
-  userId: string;
-  hash: string;
-  createdAt: Date;
-}
-
 export interface Pronouns {
   subjective: string;
   objective: string;

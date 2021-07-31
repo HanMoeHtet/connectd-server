@@ -1,6 +1,10 @@
 import { model, Schema } from '@src/config/database';
-import { EmailVerificationData } from '@src/types';
 import { Document } from 'mongoose';
+
+export interface EmailVerificationData {
+  userId: string;
+  createdAt: Date;
+}
 
 const EmailVerificationSchema = new Schema<EmailVerificationData>({
   userId: {

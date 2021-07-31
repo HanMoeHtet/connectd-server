@@ -1,7 +1,29 @@
 import { model, Schema } from '@src/config/database';
-import { Post as PostType, Privacy } from '@src/types/Post';
+import { Document, PopulatedDoc } from 'mongoose';
+import { CommentDocument } from './Comment';
+import { ReactionDocument } from './Reaction';
+import { ShareDocument } from './Share';
 
-const PostSchema = new Schema<PostType>({
+export enum Privacy {
+  PUBLIC,
+  FRIENDS,
+  ONLY_ME,
+}
+
+export interface Post {
+  userId: string;
+  createdAt: Date;
+  privacy: Privacy;
+  content: string;
+  reactionIds: string[];
+  reactions?: PopulatedDoc<ReactionDocument>[];
+  commentIds: string[];
+  comments?: PopulatedDoc<CommentDocument>[];
+  shareIds: string[];
+  shares?: PopulatedDoc<ShareDocument>[];
+}
+
+export const PostSchema = new Schema<Post>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
@@ -22,7 +44,7 @@ const PostSchema = new Schema<PostType>({
   },
   reactionIds: [
     {
-      type: Schema.Types.ObjectId,
+      type: [Schema.Types.ObjectId],
       ref: 'Reaction',
     },
   ],
@@ -40,6 +62,29 @@ const PostSchema = new Schema<PostType>({
   ],
 });
 
-const Post = model<PostType>('Post', PostSchema);
+PostSchema.virtual('reactions', {
+  ref: 'Reaction',
+  localField: 'reactionIds',
+  foreignField: '_id',
+});
 
-export default Post;
+PostSchema.virtual('comments', {
+  ref: 'Comment',
+  localField: 'commentIds',
+  foreignField: '_id',
+});
+
+PostSchema.virtual('shares', {
+  ref: 'Share',
+  localField: 'shareIds',
+  foreignField: '_id',
+});
+
+PostSchema.set('toObject', { virtuals: true });
+PostSchema.set('toJSON', { virtuals: true });
+
+export const PostModel = model<Post>('Post', PostSchema);
+
+export type PostDocument = Post & Document<any, any, Post>;
+
+export default PostModel;

@@ -1,15 +1,29 @@
 import { model, Schema } from '@src/config/database';
-import { UnverifiedUserData } from '@src/types';
+import { Pronouns } from '@src/types';
 import { Document, Model } from 'mongoose';
 
-const UnverifiedUserSchema = new Schema<UnverifiedUserData>({
+export interface UnverifiedUser {
+  username: string;
+  email?: string;
+  phoneNumber?: string;
+  hash: string;
+  birthday: Date;
+  pronouns: Pronouns;
+}
+
+const UnverifiedUserSchema = new Schema<UnverifiedUser>({
   username: {
     type: String,
     required: true,
+  },
+  email: {
+    type: String,
     unique: true,
   },
-  email: String,
-  phoneNumber: String,
+  phoneNumber: {
+    type: String,
+    unique: true,
+  },
   hash: {
     type: String,
     required: true,
@@ -25,13 +39,13 @@ const UnverifiedUserSchema = new Schema<UnverifiedUserData>({
   },
 });
 
-const User = model<UnverifiedUserData>(
+export const UnverifiedUserModel = model<UnverifiedUser>(
   'UnverifiedUser',
   UnverifiedUserSchema,
   'unverified_users'
 );
 
-export type UserDocument = UnverifiedUserData &
-  Document<any, any, UnverifiedUserData>;
+export type UnverifiedUserDocument = UnverifiedUser &
+  Document<any, any, UnverifiedUser>;
 
-export default User;
+export default UnverifiedUserModel;

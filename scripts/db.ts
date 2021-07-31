@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { init } from '../src/config/database';
-import Post from '../src/models/Post';
-import User from '../src/models/User';
+import Post, { PostDocument } from '../src/models/Post';
+import User, { UserDocument } from '../src/models/User';
 import { name, internet, date, lorem } from 'faker';
 import { hash } from 'bcrypt';
+import Comment from '../src/models/Comment';
 
 const clear = async () => {
   await Post.deleteMany({});
@@ -11,25 +12,89 @@ const clear = async () => {
   Post;
 };
 
-const seedPost = async (userId: string): Promise<string> => {
+const getRandomUser = async () => {
+  const count = await User.countDocuments();
+  const skip = Math.floor(Math.random() * count);
+  const user = await User.findOne({}).skip(skip).exec();
+  if (!user) throw Error('No users in db.');
+  return user;
+};
+
+const getRandomPost = async () => {
+  const count = await Post.countDocuments();
+  const skip = Math.floor(Math.random() * count);
+  const post = await Post.findOne({}).skip(skip).exec();
+  if (!post) throw Error('No posts in db.');
+  return post;
+};
+
+const seedComment = async (
+  post: PostDocument | undefined = undefined,
+  user: UserDocument | undefined = undefined
+): Promise<string> => {
+  if (!user) user = await getRandomUser();
+  if (!post) post = await getRandomPost();
+
+  const comment = new Comment({
+    userId: user.id,
+    postId: post.id,
+    content: lorem.sentence(),
+  });
+
+  await comment.save();
+
+  post.commentIds.push(comment.id);
+  await post.save();
+
+  user.commentIds.push(comment.id);
+  await user.save();
+
+  return comment.id;
+};
+
+const seedComments = async (
+  size: number = 10,
+  post: PostDocument | undefined = undefined,
+  user: UserDocument | undefined = undefined
+): Promise<string[]> => {
+  const commentIds = await Promise.all(
+    Array(size)
+      .fill(0)
+      .map(async () => await seedComment(post, user))
+  );
+  console.log(`${size} comments created.`);
+  return commentIds;
+};
+
+const seedPost = async (
+  user: UserDocument | undefined = undefined
+): Promise<string> => {
+  if (!user) {
+    user = await getRandomUser();
+  }
+
   const post = new Post({
-    userId,
+    userId: user.id,
     privacy: 0,
     content: lorem.paragraph(10),
   });
 
   await post.save();
+
+  user.postIds.push(post.id);
+  await user.save();
+
   return post.id;
 };
 
 const seedPosts = async (
-  size: number = 20,
-  userId: string
+  size: number = 10,
+  user: UserDocument | undefined = undefined
 ): Promise<string[]> => {
   const postIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(async () => await seedPost(userId))
+      .map(async () => await seedPost(user))
   );
   console.log(`${size} posts created.`);
   return postIds;
@@ -51,8 +116,6 @@ const seedUser = async (): Promise<string> => {
     },
   });
 
-  user.postIds = await seedPosts(10, user.id);
-
   await user.save();
 
   return user.id;
@@ -64,19 +127,39 @@ const seedUsers = async (size: number = 10) => {
   return userIds;
 };
 
+const seed = async (models: string[]) => {
+  if (models.length === 0) {
+    await seedUsers();
+    await seedPosts();
+    await seedComments();
+  } else {
+    if (models.includes('user')) {
+      await seedUsers();
+    }
+
+    if (models.includes('post')) {
+      await seedPosts();
+    }
+
+    if (models.includes('comment')) {
+      await seedComments();
+    }
+  }
+};
+
 const run = async () => {
-  const [cmd, ...rest] = process.argv.slice(2);
+  const [cmd, ...models] = process.argv.slice(2);
   await init();
   switch (cmd) {
     case 'clean':
       await clear();
       break;
     case 'seed':
-      await seedUsers(10);
+      await seed(models);
       break;
     case 'refresh':
       await clear();
-      await seedUsers(10);
+      await seed(models);
       break;
     default:
       console.log(`Unknown argument: ${cmd}`);

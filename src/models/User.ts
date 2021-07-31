@@ -1,26 +1,40 @@
 import { model, Schema } from '@src/config/database';
-import { UnverifiedUserData } from '@src/types';
-import { Post } from '@src/types/Post';
+import { UnverifiedUser } from '@src/models/UnverifiedUser';
+import { PostDocument } from '@src/models/Post';
 import { Document, Model, PopulatedDoc } from 'mongoose';
+import { ReactionDocument } from './Reaction';
+import { CommentDocument } from './Comment';
+import { ReplyDocument } from './Reply';
 
-export interface UserData extends UnverifiedUserData {
+export interface User extends UnverifiedUser {
   avatar?: string;
-  postIds: string[];
   emailVerifiedAt?: Date;
   phoneNumberVerifiedAt?: Date;
-  posts?: PopulatedDoc<Post & Document>;
+  postIds: string[];
+  posts?: PopulatedDoc<PostDocument>[];
+  reactionIds: string[];
+  reactions?: PopulatedDoc<ReactionDocument>[];
+  commentIds: string[];
+  comments?: PopulatedDoc<CommentDocument>[];
+  replyIds: string[];
+  replies?: PopulatedDoc<ReplyDocument>[];
 }
 
-const UserSchema = new Schema<UserData>({
+const UserSchema = new Schema<User>({
   username: {
     type: String,
     required: true,
-    unique: true,
   },
   avatar: String,
-  email: String,
+  email: {
+    type: String,
+    unique: true,
+  },
   emailVerifiedAt: Date,
-  phoneNumber: String,
+  phoneNumber: {
+    type: String,
+    unique: true,
+  },
   phoneNumberVerfiedAt: Date,
   hash: {
     type: String,
@@ -41,6 +55,24 @@ const UserSchema = new Schema<UserData>({
       ref: 'Post',
     },
   ],
+  reactionIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Reaction',
+    },
+  ],
+  commentIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Comment',
+    },
+  ],
+  shareIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Share',
+    },
+  ],
 });
 
 UserSchema.virtual('posts', {
@@ -49,11 +81,29 @@ UserSchema.virtual('posts', {
   foreignField: '_id',
 });
 
+UserSchema.virtual('reactions', {
+  ref: 'Reaction',
+  localField: 'reactionIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('comments', {
+  ref: 'Comment',
+  localField: 'commentIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('replies', {
+  ref: 'Reply',
+  localField: 'replyIds',
+  foreignField: '_id',
+});
+
 UserSchema.set('toObject', { virtuals: true });
 UserSchema.set('toJSON', { virtuals: true });
 
-const User: Model<UserData> = model<UserData>('User', UserSchema);
+export const UserModel: Model<User> = model<User>('User', UserSchema);
 
-export type UserDocument = UserData & Document<any, any, UserData>;
+export type UserDocument = User & Document<any, any, User>;
 
-export default User;
+export default UserModel;

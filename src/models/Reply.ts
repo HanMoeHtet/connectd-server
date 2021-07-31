@@ -1,10 +1,22 @@
 import { model, Schema } from '@src/config/database';
-import { Reply } from '@src/types/Post';
+import { Document } from 'mongoose';
+
+export interface Reply {
+  userId: string;
+  commentId: string;
+  createdAt: Date;
+  content: string;
+  reactionIds: string[];
+}
 
 export const ReplySchema = new Schema<Reply>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
+  },
+  commentId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Comment',
   },
   createdAt: {
     type: Date,
@@ -22,6 +34,8 @@ export const ReplySchema = new Schema<Reply>({
   ],
 });
 
-const Reply = model<Reply>('Reply', ReplySchema);
+export const ReplyModel = model<Reply>('Reply', ReplySchema);
 
-export default Reply;
+export type ReplyDocument = Reply & Document<any, any, Reply>;
+
+export default ReplyModel;

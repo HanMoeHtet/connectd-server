@@ -1,5 +1,18 @@
 import { model, Schema } from '@src/config/database';
-import { ReactionType, Reaction } from '@src/types/Post';
+import { Document } from 'mongoose';
+
+export enum ReactionType {
+  LIKE,
+  FAVORITE,
+  SATISFIED,
+  DISSATISFIED,
+}
+
+export interface Reaction {
+  userId: string;
+  type: ReactionType;
+  createdAt: Date;
+}
 
 const ReactionSchema = new Schema<Reaction>({
   userId: {
@@ -17,6 +30,8 @@ const ReactionSchema = new Schema<Reaction>({
   },
 });
 
-const Reaction = model<Reaction>('Reaction', ReactionSchema);
+export const ReactionModel = model<Reaction>('Reaction', ReactionSchema);
 
-export default Reaction;
+export type ReactionDocument = Reaction & Document<any, any, Reaction>;
+
+export default ReactionModel;
