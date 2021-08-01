@@ -1,5 +1,5 @@
-import EmailVerification from '@src/models/EmailVerification';
-import { UnverifiedUserDocument } from '@src/models/UnverifiedUser';
+import EmailVerification from '@src/resources/email-verification/email-verification.model';
+import { UnverifiedUserDocument } from '@src/resources/unverified-user/unverified-user.model';
 import { sign } from 'jsonwebtoken';
 import { createTransport } from 'nodemailer';
 import { MailOptions } from 'nodemailer/lib/json-transport';

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import authRoutes from './auth';
 import profileRoutes from './profile';
 import newsfeedRoutes from './newsfeed';
-import userRoutes from './uses';
+import userRoutes from './users';
 import postRoutes from './posts';
 
 const router = Router();

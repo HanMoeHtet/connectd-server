@@ -1,9 +1,9 @@
 import { BCRYPT_ROUNDS, OTP_LENGTH } from '@src/constants';
-import { UserDocument } from '@src/models/User';
+import { UserDocument } from '@src/resources/models/User';
 import Twilio from 'twilio';
 import { hash } from 'bcrypt';
-import PhoneNumberVerification from '@src/models/PhoneNmberVerification';
-import { UnverifiedUserDocument } from '@src/models/UnverifiedUser';
+import PhoneNumberVerification from '@src/resources/models/PhoneNmberVerification';
+import { UnverifiedUserDocument } from '@src/resources/models/UnverifiedUser';
 
 const accountSid =
   process.env.TWILIO_ACCOUNT_SID! || 'ACc0ce95d9a202822f2e835203dc906bc4';

@@ -1,6 +1,6 @@
-import * as NewsfeedController from '@src/controllers/NewsfeedController';
+import * as NewsfeedController from '@src/http/controllers/newsfeed.controller';
 import { Router } from 'express';
-import checkAuth from '@src/middlewares/CheckAuth';
+import checkAuth from '@src/http/middlewares/check-auth.middleware.';
 
 const router = Router();
 

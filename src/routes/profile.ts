@@ -1,9 +1,9 @@
 import {
   getBasicProfile,
   getProfile,
-} from '@src/controllers/ProfileController';
-import checkAuth from '@src/middlewares/CheckAuth';
-import { Router } from 'express';
+} from '@src/http/controllers/profile.controller';
+import checkAuth from '@src/http/middlewares/check-auth.middleware.';
+import { Request, Router } from 'express';
 
 const router = Router();
 

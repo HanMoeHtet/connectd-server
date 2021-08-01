@@ -5,6 +5,7 @@ import User, { UserDocument } from '../src/models/User';
 import { name, internet, date, lorem } from 'faker';
 import { hash } from 'bcrypt';
 import Comment from '../src/models/Comment';
+import ReactionModel from '../src/models/Reaction';
 
 const clear = async () => {
   await Post.deleteMany({});
@@ -26,6 +27,44 @@ const getRandomPost = async () => {
   const post = await Post.findOne({}).skip(skip).exec();
   if (!post) throw Error('No posts in db.');
   return post;
+};
+
+const seedReaction = async (
+  post: PostDocument | undefined = undefined,
+  user: UserDocument | undefined = undefined
+) => {
+  if (!user) user = await getRandomUser();
+  if (!post) post = await getRandomPost();
+
+  const reaction = new ReactionModel({
+    userId: user.id,
+    postId: post.id,
+    content: lorem.sentence(),
+  });
+
+  await reaction.save();
+
+  post.reactionIds.push(reaction.id);
+  await post.save();
+
+  user.reactionIds.push(reaction.id);
+  await user.save();
+
+  return reaction.id;
+};
+
+const seedReactions = async (
+  size: number = 10,
+  post: PostDocument | undefined = undefined,
+  user: UserDocument | undefined = undefined
+): Promise<string[]> => {
+  const reactionIds = await Promise.all(
+    Array(size)
+      .fill(0)
+      .map(async () => await seedReaction(post, user))
+  );
+  console.log(`${size} reactions created.`);
+  return reactionIds;
 };
 
 const seedComment = async (

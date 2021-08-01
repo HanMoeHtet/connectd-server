@@ -1,5 +1,5 @@
-import * as PostController from '@src/controllers/PostController';
-import checkAuth from '@src/middlewares/CheckAuth';
+import * as PostController from '@src/http/controllers/post.controller';
+import checkAuth from '@src/http/middlewares/check-auth.middleware.';
 import { Router } from 'express';
 
 const router = Router();
@@ -7,6 +7,8 @@ const router = Router();
 router.use(checkAuth);
 
 router.get('/:postId', PostController.show);
+router.get('/:postId/reactions', PostController.getReactionsInPost);
 router.get('/:postId/comments', PostController.getCommentsInPost);
+router.get('/:postId/shares', PostController.getSharesInPost);
 
 export default router;

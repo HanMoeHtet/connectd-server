@@ -5,7 +5,7 @@ import {
   MIN_PASSWORD_LENGTH,
   MIN_USERNAME_LENGTH,
 } from '@src/constants';
-import User from '@src/models/User';
+import User from '@src/resources/models/User';
 import i18next from '@src/services/i18next';
 import { validatePhoneNumber as validateNationalNumber } from '@src/services/sms';
 import {

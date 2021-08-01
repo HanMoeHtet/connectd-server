@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { register } from '@src/models';
+import { register } from '@src/resources';
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));

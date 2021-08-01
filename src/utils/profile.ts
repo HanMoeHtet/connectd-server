@@ -1,4 +1,4 @@
-import { UserDocument } from '@src/models/User';
+import { UserDocument } from '@src/resources/models/User';
 
 export const prepareProfileResponse = (user: UserDocument) => {
   const { id, username, avatar, email, phoneNumber, birthday, pronouns } = user;

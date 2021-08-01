@@ -1,9 +1,9 @@
-import * as EmailRegisterController from '@src/controllers/EmailRegisterController';
-import * as EmailVerificationController from '@src/controllers/EmailVerificationController';
-import * as EmailLoginController from '@src/controllers/EmailLoginController';
-import * as PhoneNumberRegisterController from '@src/controllers/PhoneNumberRegisterController';
-import * as PhoneNumberVerificationController from '@src/controllers/PhoneNumberVerificationController';
-import * as PhoneNumberLoginController from '@src/controllers/PhoneNumberLoginController';
+import * as EmailRegisterController from '@src/http/controllers/email-register.controller';
+import * as EmailVerificationController from '@src/http/controllers/email-verification.controller';
+import * as EmailLoginController from '@src/http/controllers/email-login.controller';
+import * as PhoneNumberRegisterController from '@src/http/controllers/phone-number-register.controller';
+import * as PhoneNumberVerificationController from '@src/http/controllers/phone-number-verification.contorller';
+import * as PhoneNumberLoginController from '@src/http/controllers/phone-number-login.controller';
 import { Router } from 'express';
 
 const router = Router();

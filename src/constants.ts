@@ -28,4 +28,6 @@ export const SERVER_ERROR = 500;
 
 // Limits
 export const MAX_POSTS_PER_PAGE = 10;
+export const MAX_REACTIONS_PER_POST_PER_REQUEST = 5;
 export const MAX_COMMENTS_PER_POST_PER_REQUEST = 5;
+export const MAX_SHARES_PER_POST_PER_REQUEST = 5;

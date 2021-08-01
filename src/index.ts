@@ -5,8 +5,8 @@ import '@src/services/mail';
 import app, { init as initServer } from '@src/config/app';
 
 import ApiRoutes from '@src/routes';
-import localeInspector from './middlewares/LocaleInspector';
-import { handleError } from './error_handlers/handler';
+import localeInspector from './http/middlewares/locale-inspector.middleware';
+import { handleError } from './http/error-handlers/handler';
 
 app.use('/api', localeInspector, ApiRoutes);
 
