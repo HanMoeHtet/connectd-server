@@ -4,7 +4,12 @@ import { Request, Response } from 'express';
 
 export const getPosts = async (req: Request, res: Response) => {
   const skip = Number(req.query.skip);
-  const limit = Math.max(Number(req.query.limit), MAX_POSTS_PER_PAGE);
+  const limit = Math.min(Number(req.query.limit), MAX_POSTS_PER_PAGE);
+
+  if (!limit)
+    return res.json({
+      data: [],
+    });
 
   const posts = await Post.find({})
     .sort({ createdAt: 'desc' })

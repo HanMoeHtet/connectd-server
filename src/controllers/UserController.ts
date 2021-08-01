@@ -5,6 +5,18 @@ import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { Response } from 'express';
 
+export const getProfile = (req: Request, res: AuthResponse) => {
+  return res.json({
+    data: prepareProfileResponse(res.locals.user),
+  });
+};
+
+export const getBasicProfile = (req: Request, res: AuthResponse) => {
+  return res.json({
+    data: prepareBasicProfileResponse(res.locals.user),
+  });
+};
+
 interface GetPostsByUserRequest
   extends Request<{
     params: {
@@ -15,7 +27,6 @@ interface GetPostsByUserRequest
       skip?: string;
     };
   }> {}
-
 export const getPostsByUser = async (
   req: GetPostsByUserRequest,
   res: Response

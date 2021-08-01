@@ -1,4 +1,8 @@
-import { BAD_REQUEST, SUCCESS } from '@src/constants';
+import {
+  BAD_REQUEST,
+  MAX_COMMENTS_PER_POST_PER_REQUEST,
+  SUCCESS,
+} from '@src/constants';
 import { RequestError } from '@src/error_handlers/handler';
 import Post from '@src/models/Post';
 import i18next from '@src/services/i18next';
@@ -60,6 +64,57 @@ export const show = async (
   });
 };
 
+interface GetReactionsInPostRequest
+  extends Request<{
+    params: {
+      postId?: string;
+    };
+    query: {
+      skip?: string;
+      limit?: string;
+    };
+  }> {}
+export const getReactionsInPost = async (
+  req: GetReactionsInPostRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { skip, limit } = req.query;
+  const { postId } = req.params;
+
+  let post;
+
+  try {
+    post = await findPost(postId);
+  } catch (err) {
+    next(err);
+    return;
+  }
+
+  post = await post
+    .populate({
+      path: 'comments',
+      options: {
+        skip: Number(skip),
+        limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
+      },
+    })
+    .execPopulate();
+
+  if (!limit)
+    return res.status(SUCCESS).json({
+      data: {
+        comments: [],
+      },
+    });
+
+  return res.status(SUCCESS).json({
+    data: {
+      comments: post.comments,
+    },
+  });
+};
+
 interface GetCommentsInPostRequest
   extends Request<{
     params: {
@@ -87,14 +142,22 @@ export const getCommentsInPost = async (
     return;
   }
 
-  // post = post.populate({
-  //   path: 'comments',
-  //   options: { skip: Number(skip), limit: Number(limit) || 1 },
-  // });
+  post = await post
+    .populate({
+      path: 'comments',
+      options: {
+        skip: Number(skip),
+        limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
+      },
+    })
+    .execPopulate();
 
-  post = await post.populate('comments').execPopulate();
-
-  console.log(post.populated('comments'));
+  if (!limit)
+    return res.status(SUCCESS).json({
+      data: {
+        comments: [],
+      },
+    });
 
   return res.status(SUCCESS).json({
     data: {
