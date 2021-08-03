@@ -4,8 +4,8 @@ import {
   MAX_REACTIONS_PER_POST_PER_REQUEST,
   SUCCESS,
 } from '@src/constants';
-import { RequestError } from '@src/error-handlers/handler';
-import Post from '@src/resources/models/Post';
+import { RequestError } from '@src/http/error-handlers/handler';
+import Post from '@src/resources/post/post.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { NextFunction, Response } from 'express';

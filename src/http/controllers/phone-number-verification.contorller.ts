@@ -6,9 +6,9 @@ import {
   SUCCESS,
   UNAUTHORIZED,
 } from '@src/constants';
-import PhoneNumberVerification from '@src/resources/phone-number-verification/phone-number-verification';
-import UnverifiedUser from '@src/resources/models/UnverifiedUser';
-import User from '@src/resources/models/User';
+import PhoneNumberVerification from '@src/resources/phone-number-verification/phone-number-verification.model';
+import UnverifiedUser from '@src/resources/unverified-user/unverified-user.model';
+import User from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { sendOTP } from '@src/services/sms';
 import { compare } from 'bcrypt';

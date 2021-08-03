@@ -1,5 +1,5 @@
 import { AUTH_TOKEN_TYPE, BAD_REQUEST } from '@src/constants';
-import User from '@src/resources/models/User';
+import User from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { AuthTokenPayload } from '@src/types';
 import { NextFunction, Response, Request } from 'express';

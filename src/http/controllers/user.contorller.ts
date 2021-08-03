@@ -1,7 +1,7 @@
 import { BAD_REQUEST, NOT_FOUND } from '@src/constants';
-import { RequestError } from '@src/error-handlers/handler';
-import Post from '@src/resources/models/Post';
-import User, { UserModel } from '@src/resources/models/User';
+import { RequestError } from '@src/http/error-handlers/handler';
+import Post from '@src/resources/post/post.model';
+import User, { UserModel } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import {

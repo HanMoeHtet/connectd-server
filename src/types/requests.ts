@@ -1,4 +1,4 @@
-import { UserDocument } from '@src/resources/models/User';
+import { UserDocument } from '@src/resources/user/user.model';
 import * as core from 'express-serve-static-core';
 
 export interface Request<
