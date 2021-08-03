@@ -2,7 +2,6 @@ import { model, Schema } from '@src/config/database';
 import { Document, PopulatedDoc } from 'mongoose';
 import { CommentDocument } from '../comment/comment.model';
 import { ReactionDocument } from '../reaction/reaction.model';
-import { ShareDocument } from '../share/share.model';
 
 export enum Privacy {
   PUBLIC,
@@ -10,7 +9,12 @@ export enum Privacy {
   ONLY_ME,
 }
 
-export interface Post {
+export enum PostType {
+  POST,
+  SHARE,
+}
+
+export interface BasePost {
   userId: string;
   createdAt: Date;
   privacy: Privacy;
@@ -19,9 +23,22 @@ export interface Post {
   reactions?: PopulatedDoc<ReactionDocument>[];
   commentIds: string[];
   comments?: PopulatedDoc<CommentDocument>[];
+  /**
+   * Store shared post ids
+   */
   shareIds: string[];
-  shares?: PopulatedDoc<ShareDocument>[];
+  shares?: PopulatedDoc<PostDocument>[];
 }
+
+export interface NormalPost extends BasePost {
+  type: PostType.POST;
+}
+
+export interface SharedPost extends BasePost {
+  type: PostType.SHARE;
+}
+
+export type Post = NormalPost | SharedPost;
 
 export const PostSchema = new Schema<Post>({
   userId: {
@@ -29,10 +46,12 @@ export const PostSchema = new Schema<Post>({
     ref: 'User',
     required: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  type: {
+    type: Number,
+    enum: Object.values(PostType),
+    required: true,
   },
+  sourceId: {},
   privacy: {
     type: Number,
     enum: Object.values(Privacy),
@@ -60,6 +79,10 @@ export const PostSchema = new Schema<Post>({
       ref: 'Share',
     },
   ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 PostSchema.virtual('reactions', {

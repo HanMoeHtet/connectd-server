@@ -10,6 +10,7 @@ db.once('open', function () {
 mongoose.set('debug', true);
 
 export const init = async () => {
+  console.log(process.env.MONGODB_URL);
   await mongoose.connect(process.env.MONGODB_URL!, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -20,3 +21,5 @@ export const init = async () => {
 };
 
 export const { Schema, model } = mongoose;
+
+export default db;

@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "db:seed": "ts-node -r tsconfig-paths/register ./src/resources/seed.ts seed",
+    "db:clear": "ts-node -r tsconfig-paths/register ./src/resources/seed.ts clear",
+    "db:refresh": "ts-node -r tsconfig-paths/register ./src/resources/seed.ts refresh",
     "start": "tsc && node -r ./tsconfig-paths-bootstrap.js ./build/index.js",
     "dev": "ts-node-dev -r tsconfig-paths/register ./src/index.ts",
-    "db:seed": "ts-node -r tsconfig-paths/register ./scripts/db.ts",
-    "db:clean": "ts-node -r tsconfig-paths/register ./scripts/db.ts clean",
     "stage": "npm run start",
     "prod": "npm run start"
   },

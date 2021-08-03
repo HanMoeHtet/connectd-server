@@ -19,10 +19,12 @@ const UnverifiedUserSchema = new Schema<UnverifiedUser>({
   email: {
     type: String,
     unique: true,
+    sparse: true,
   },
   phoneNumber: {
     type: String,
     unique: true,
+    sparse: true,
   },
   hash: {
     type: String,

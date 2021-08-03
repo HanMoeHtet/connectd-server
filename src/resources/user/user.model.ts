@@ -29,11 +29,13 @@ const UserSchema = new Schema<User>({
   email: {
     type: String,
     unique: true,
+    sparse: true,
   },
   emailVerifiedAt: Date,
   phoneNumber: {
     type: String,
     unique: true,
+    sparse: true,
   },
   phoneNumberVerfiedAt: Date,
   hash: {
@@ -67,10 +69,10 @@ const UserSchema = new Schema<User>({
       ref: 'Comment',
     },
   ],
-  shareIds: [
+  replyIds: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Share',
+      ref: 'Reply',
     },
   ],
 });
