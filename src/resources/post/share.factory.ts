@@ -18,6 +18,7 @@ export const seedShare = async (
 
   const sharedPost = new PostModel({
     userId: user.id,
+    sourceId: post.id,
     type: PostType.SHARE,
     privacy: 0,
     content: lorem.paragraph(10),

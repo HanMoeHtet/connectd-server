@@ -5,7 +5,7 @@ import {
   SUCCESS,
 } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
-import Post from '@src/resources/post/post.model';
+import Post, { PostType } from '@src/resources/post/post.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { NextFunction, Response } from 'express';
@@ -92,22 +92,36 @@ export const getReactionsInPost = async (
     return;
   }
 
-  post = await post
-    .populate({
-      path: 'reactions',
-      options: {
-        skip: Number(skip),
-        limit: Math.min(Number(limit), MAX_REACTIONS_PER_POST_PER_REQUEST),
-      },
-    })
-    .execPopulate();
-
   if (!limit)
     return res.status(SUCCESS).json({
       data: {
         reactions: [],
       },
     });
+
+  if (post.type === PostType.POST) {
+    post = await post
+      .populate({
+        path: 'reactions',
+        options: {
+          skip: Number(skip),
+          limit: Math.min(Number(limit), MAX_REACTIONS_PER_POST_PER_REQUEST),
+        },
+      })
+      .execPopulate();
+  }
+
+  if (post.type === PostType.SHARE) {
+    post = await post
+      .populate({
+        path: 'reactions',
+        options: {
+          skip: Number(skip),
+          limit: Math.min(Number(limit), MAX_REACTIONS_PER_POST_PER_REQUEST),
+        },
+      })
+      .execPopulate();
+  }
 
   return res.status(SUCCESS).json({
     data: {
@@ -143,22 +157,36 @@ export const getCommentsInPost = async (
     return;
   }
 
-  post = await post
-    .populate({
-      path: 'comments',
-      options: {
-        skip: Number(skip),
-        limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
-      },
-    })
-    .execPopulate();
-
   if (!limit)
     return res.status(SUCCESS).json({
       data: {
         comments: [],
       },
     });
+
+  if (post.type === PostType.POST) {
+    post = await post
+      .populate({
+        path: 'comments',
+        options: {
+          skip: Number(skip),
+          limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
+        },
+      })
+      .execPopulate();
+  }
+
+  if (post.type === PostType.SHARE) {
+    post = await post
+      .populate({
+        path: 'comments',
+        options: {
+          skip: Number(skip),
+          limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
+        },
+      })
+      .execPopulate();
+  }
 
   return res.status(SUCCESS).json({
     data: {
@@ -194,22 +222,36 @@ export const getSharesInPost = async (
     return;
   }
 
-  post = await post
-    .populate({
-      path: 'shares',
-      options: {
-        skip: Number(skip),
-        limit: Math.min(Number(limit), MAX_REACTIONS_PER_POST_PER_REQUEST),
-      },
-    })
-    .execPopulate();
-
   if (!limit)
     return res.status(SUCCESS).json({
       data: {
         shares: [],
       },
     });
+
+  if (post.type === PostType.POST) {
+    post = await post
+      .populate({
+        path: 'shares',
+        options: {
+          skip: Number(skip),
+          limit: Math.min(Number(limit), MAX_REACTIONS_PER_POST_PER_REQUEST),
+        },
+      })
+      .execPopulate();
+  }
+
+  if (post.type === PostType.SHARE) {
+    post = await post
+      .populate({
+        path: 'shares',
+        options: {
+          skip: Number(skip),
+          limit: Math.min(Number(limit), MAX_REACTIONS_PER_POST_PER_REQUEST),
+        },
+      })
+      .execPopulate();
+  }
 
   return res.status(SUCCESS).json({
     data: {

@@ -19,24 +19,30 @@ const clear = async (session: ClientSession) => {
   await clearShares(session);
 };
 
+const USER_SIZE = 10;
+const POST_SIZE = 10;
+const REACTION_SIZE = 10;
+const COMMENT_SIZE = 10;
+const SHARE_SIZE = 10;
+
 const seed = async (session: ClientSession, models: string[]) => {
   if (models.length === 0) {
-    await seedUsers(session);
-    await seedPosts(session);
-    await seedReactionsInPost(session);
-    await seedComments(session);
-    await seedShares(session);
+    await seedUsers(session, USER_SIZE);
+    await seedPosts(session, POST_SIZE);
+    await seedReactionsInPost(session, REACTION_SIZE);
+    await seedComments(session, COMMENT_SIZE);
+    await seedShares(session, SHARE_SIZE);
   } else {
     if (models.includes('user')) {
-      await seedUsers(session);
+      await seedUsers(session, USER_SIZE);
     }
 
     if (models.includes('post')) {
-      await seedPosts(session);
+      await seedPosts(session, POST_SIZE);
     }
 
     if (models.includes('comment')) {
-      await seedComments(session);
+      await seedComments(session, COMMENT_SIZE);
     }
   }
 };

@@ -42,7 +42,7 @@ export const seedPosts = async (
 };
 
 export const getRandomPost = async (session: ClientSession | null = null) => {
-  const count = await Post.countDocuments();
+  const count = await Post.countDocuments().session(session);
   const skip = Math.floor(Math.random() * count);
   const post = await Post.findOne({}).skip(skip).session(session).exec();
   if (!post) throw Error('No posts in db.');

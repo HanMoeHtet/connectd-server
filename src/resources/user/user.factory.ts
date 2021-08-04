@@ -40,7 +40,7 @@ export const seedUsers = async (
 };
 
 export const getRandomUser = async (session: ClientSession | null = null) => {
-  const count = await User.countDocuments();
+  const count = await User.countDocuments().session(session);
   const skip = Math.floor(Math.random() * count);
   const user = await User.findOne({}).skip(skip).session(session).exec();
   if (!user) throw Error('No users in db.');

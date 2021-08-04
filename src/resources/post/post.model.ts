@@ -4,14 +4,14 @@ import { CommentDocument } from '../comment/comment.model';
 import { ReactionDocument } from '../reaction/reaction.model';
 
 export enum Privacy {
-  PUBLIC,
-  FRIENDS,
-  ONLY_ME,
+  PUBLIC = 'PUBLIC',
+  FRIENDS = 'FRIENDS',
+  ONLY_ME = 'ONLY_ME',
 }
 
 export enum PostType {
-  POST,
-  SHARE,
+  POST = 'POST',
+  SHARE = 'SHARE',
 }
 
 export interface BasePost {
@@ -36,6 +36,7 @@ export interface NormalPost extends BasePost {
 
 export interface SharedPost extends BasePost {
   type: PostType.SHARE;
+  sourceId: string;
 }
 
 export type Post = NormalPost | SharedPost;
@@ -47,13 +48,16 @@ export const PostSchema = new Schema<Post>({
     required: true,
   },
   type: {
-    type: Number,
+    type: String,
     enum: Object.values(PostType),
     required: true,
   },
-  sourceId: {},
+  sourceId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Post',
+  },
   privacy: {
-    type: Number,
+    type: String,
     enum: Object.values(Privacy),
     required: true,
   },
@@ -98,7 +102,7 @@ PostSchema.virtual('comments', {
 });
 
 PostSchema.virtual('shares', {
-  ref: 'Share',
+  ref: 'Post',
   localField: 'shareIds',
   foreignField: '_id',
 });
