@@ -45,11 +45,12 @@ export const seedPosts = async ({
   user,
   userCount,
 }: SeedPostsOptions): Promise<string[]> => {
-  const postIds = await Promise.all(
-    Array(size)
-      .fill(0)
-      .map(async () => await seedPost({ session, user, userCount }))
-  );
+  const postIds = [];
+
+  for (let i = 0; i < size; i++) {
+    postIds.push(await seedPost({ session, user, userCount }));
+  }
+
   console.log(`${size} posts created.`);
   return postIds;
 };

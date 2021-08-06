@@ -1,7 +1,7 @@
 import { model, Schema } from '@src/config/database';
 import { Document, PopulatedDoc } from 'mongoose';
 import { CommentDocument } from '../comment/comment.model';
-import { ReactionDocument } from '../reaction/reaction.model';
+import { ReactionDocument, ReactionType } from '../reaction/reaction.model';
 
 export enum Privacy {
   PUBLIC = 'PUBLIC',
@@ -19,8 +19,7 @@ export interface BasePost {
   createdAt: Date;
   privacy: Privacy;
   content: string;
-  reactionIds: string[];
-  reactions?: PopulatedDoc<ReactionDocument>[];
+  reactions: Map<ReactionType, string[]>;
   commentIds: string[];
   comments?: PopulatedDoc<CommentDocument>[];
   /**
@@ -65,15 +64,19 @@ export const PostSchema = new Schema<Post>({
     type: String,
     required: true,
   },
-  reactionIds: [
-    {
-      type: [Schema.Types.ObjectId],
-      ref: 'Reaction',
-    },
-  ],
+  reactions: {
+    type: Map,
+    of: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Reaction',
+      },
+    ],
+    default: new Map(),
+  },
   commentIds: [
     {
-      type: [Schema.Types.ObjectId],
+      type: Schema.Types.ObjectId,
       ref: 'Comment',
     },
   ],
@@ -87,12 +90,6 @@ export const PostSchema = new Schema<Post>({
     type: Date,
     default: Date.now,
   },
-});
-
-PostSchema.virtual('reactions', {
-  ref: 'Reaction',
-  localField: 'reactionIds',
-  foreignField: '_id',
 });
 
 PostSchema.virtual('comments', {

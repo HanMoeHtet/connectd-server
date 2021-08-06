@@ -6,6 +6,7 @@ import {
 } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import Post, { PostType } from '@src/resources/post/post.model';
+import { ReactionType } from '@src/resources/reaction/reaction.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { NextFunction, Response } from 'express';

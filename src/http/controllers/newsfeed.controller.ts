@@ -1,5 +1,5 @@
 import { MAX_POSTS_PER_PAGE } from '@src/constants';
-import Post from '@src/resources/post/post.model';
+import Post, { PostType } from '@src/resources/post/post.model';
 import { Request, Response } from 'express';
 
 export const getPosts = async (req: Request, res: Response) => {
@@ -11,7 +11,7 @@ export const getPosts = async (req: Request, res: Response) => {
       data: [],
     });
 
-  const posts = await Post.find({})
+  const posts = await Post.find({ type: PostType.POST })
     .sort({ createdAt: 'desc' })
     .skip(skip)
     .limit(limit)
@@ -20,6 +20,6 @@ export const getPosts = async (req: Request, res: Response) => {
   return res.json({
     data: {
       posts,
-    }
+    },
   });
 };

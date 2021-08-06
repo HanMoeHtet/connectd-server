@@ -60,14 +60,19 @@ export const seedShares = async ({
   postCount,
   userCount,
 }: SeedSharesOptions): Promise<string[]> => {
-  const shareIds = await Promise.all(
-    Array(size)
-      .fill(0)
-      .map(
-        async () =>
-          await seedShare({ session, post, user, postCount, userCount })
-      )
-  );
+  const shareIds = [];
+
+  for (let i = 0; i < size; i++) {
+    const shareId = await seedShare({
+      session,
+      post,
+      user,
+      postCount,
+      userCount,
+    });
+    shareIds.push(shareId);
+  }
+
   console.log(`${size} shares created.`);
   return shareIds;
 };

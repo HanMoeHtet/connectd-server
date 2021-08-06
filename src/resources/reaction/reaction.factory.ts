@@ -28,9 +28,9 @@ export const seedReactionInPost = async ({
   const reactionTypes = Object.values(ReactionType);
 
   const randomReactionType =
-    reactionTypes[Math.floor(Math.random() * reactionTypes.length)];
+    reactionTypes[Math.floor(Math.random() * reactionTypes.length)]!;
 
-  const reaction = new ReactionModel({
+  let reaction = new ReactionModel({
     userId: user.id,
     sourceType: 'Post',
     sourceId: post.id,
@@ -39,8 +39,11 @@ export const seedReactionInPost = async ({
 
   await reaction.save({ session });
 
-  post.reactionIds.push(reaction.id);
-  console.log(post);
+  post.reactions.set(randomReactionType, [
+    ...(post.reactions.get(randomReactionType) || []),
+    reaction.id,
+  ]);
+
   await post.save({ session });
 
   user.reactionIds.push(reaction.id);
@@ -65,20 +68,20 @@ export const seedReactionsInPost = async ({
   user,
   userCount,
 }: SeedReactionsInPostOptions): Promise<string[]> => {
-  const reactionIds = await Promise.all(
-    Array(size)
-      .fill(0)
-      .map(
-        async () =>
-          await seedReactionInPost({
-            session,
-            post,
-            user,
-            postCount,
-            userCount,
-          })
-      )
-  );
+  let reactionIds = [];
+
+  for (let i = 0; i < size; i++) {
+    reactionIds.push(
+      await seedReactionInPost({
+        session,
+        post,
+        postCount,
+        user,
+        userCount,
+      })
+    );
+  }
+
   console.log(`${size} reactions created.`);
   return reactionIds;
 };

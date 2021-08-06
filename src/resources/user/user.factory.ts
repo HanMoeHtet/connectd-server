@@ -37,11 +37,12 @@ export const seedUsers = async ({
   session = null,
   size = 10,
 }: SeedUsersOptions) => {
-  const userIds = await Promise.all(
-    Array(size)
-      .fill(0)
-      .map(() => seedUser({ session }))
-  );
+  const userIds = [];
+
+  for (let i = 0; i < size; i++) {
+    userIds.push(await seedUser({ session }));
+  }
+
   console.log(`${size} users created.`);
   return userIds;
 };
