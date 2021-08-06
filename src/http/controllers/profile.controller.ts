@@ -8,7 +8,7 @@ import {
 export const getProfile = (req: Request, res: AuthResponse) => {
   return res.json({
     data: {
-      profile: prepareProfileResponse(res.locals.user),
+      user: prepareProfileResponse(res.locals.user),
     },
   });
 };
@@ -16,7 +16,7 @@ export const getProfile = (req: Request, res: AuthResponse) => {
 export const getBasicProfile = (req: Request, res: AuthResponse) => {
   return res.json({
     data: {
-      profile: prepareBasicProfileResponse(res.locals.user),
+      user: prepareBasicProfileResponse(res.locals.user),
     },
   });
 };

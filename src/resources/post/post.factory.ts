@@ -4,18 +4,24 @@ import Post, { PostType } from '@src/resources/post/post.model';
 import { getRandomUser } from '../user/user.factory';
 import { ClientSession } from 'mongoose';
 
-export const seedPost = async (
-  session: ClientSession | null = null,
-  user: UserDocument | undefined = undefined
-): Promise<string> => {
+interface SeedPostOptions {
+  session: ClientSession | null;
+  user?: UserDocument;
+  userCount?: number;
+}
+export const seedPost = async ({
+  session = null,
+  user,
+  userCount,
+}: SeedPostOptions): Promise<string> => {
   if (!user) {
-    user = await getRandomUser(session);
+    user = await getRandomUser({ session, count: userCount });
   }
 
   const post = new Post({
     userId: user.id,
     type: PostType.POST,
-    privacy: 0,
+    privacy: 'PUBLIC',
     content: lorem.paragraph(10),
   });
 
@@ -27,22 +33,36 @@ export const seedPost = async (
   return post.id;
 };
 
-export const seedPosts = async (
-  session: ClientSession | null = null,
-  size: number = 10,
-  user: UserDocument | undefined = undefined
-): Promise<string[]> => {
+interface SeedPostsOptions {
+  session: ClientSession | null;
+  size: number;
+  user?: UserDocument;
+  userCount?: number;
+}
+export const seedPosts = async ({
+  session = null,
+  size = 10,
+  user,
+  userCount,
+}: SeedPostsOptions): Promise<string[]> => {
   const postIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(async () => await seedPost(session, user))
+      .map(async () => await seedPost({ session, user, userCount }))
   );
   console.log(`${size} posts created.`);
   return postIds;
 };
 
-export const getRandomPost = async (session: ClientSession | null = null) => {
-  const count = await Post.countDocuments().session(session);
+interface GetRandomPostOptions {
+  session: ClientSession | null;
+  count: number | undefined;
+}
+export const getRandomPost = async ({
+  session = null,
+  count,
+}: GetRandomPostOptions) => {
+  if (!count) count = await Post.countDocuments().session(session);
   const skip = Math.floor(Math.random() * count);
   const post = await Post.findOne({}).skip(skip).session(session).exec();
   if (!post) throw Error('No posts in db.');

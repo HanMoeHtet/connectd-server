@@ -6,13 +6,22 @@ import { getRandomUser } from '../user/user.factory';
 import { getRandomPost } from '../post/post.factory';
 import { ClientSession } from 'mongoose';
 
-export const seedComment = async (
-  session: ClientSession | null = null,
-  post: PostDocument | undefined = undefined,
-  user: UserDocument | undefined = undefined
-): Promise<string> => {
-  if (!user) user = await getRandomUser(session);
-  if (!post) post = await getRandomPost(session);
+interface SeedCommentOptions {
+  session: ClientSession | null;
+  post?: PostDocument;
+  postCount?: number;
+  user?: UserDocument;
+  userCount?: number;
+}
+export const seedComment = async ({
+  session = null,
+  post,
+  postCount,
+  user,
+  userCount,
+}: SeedCommentOptions): Promise<string> => {
+  if (!user) user = await getRandomUser({ session, count: userCount });
+  if (!post) post = await getRandomPost({ session, count: postCount });
 
   const comment = new Comment({
     userId: user.id,
@@ -31,16 +40,29 @@ export const seedComment = async (
   return comment.id;
 };
 
-export const seedComments = async (
-  session: ClientSession | null = null,
-  size: number = 10,
-  post: PostDocument | undefined = undefined,
-  user: UserDocument | undefined = undefined
-): Promise<string[]> => {
+interface SeedCommentsOptions {
+  session: ClientSession | null;
+  size: number;
+  post?: PostDocument;
+  user?: UserDocument;
+  postCount?: number;
+  userCount?: number;
+}
+export const seedComments = async ({
+  session = null,
+  size = 10,
+  post,
+  user,
+  postCount,
+  userCount,
+}: SeedCommentsOptions): Promise<string[]> => {
   const commentIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(async () => await seedComment(session, post, user))
+      .map(
+        async () =>
+          await seedComment({ session, post, user, postCount, userCount })
+      )
   );
   console.log(`${size} comments created.`);
   return commentIds;

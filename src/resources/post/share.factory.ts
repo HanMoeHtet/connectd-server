@@ -8,19 +8,28 @@ import { getRandomUser } from '../user/user.factory';
 import { getRandomPost } from '../post/post.factory';
 import { ClientSession } from 'mongoose';
 
-export const seedShare = async (
-  session: ClientSession | null = null,
-  post: PostDocument | undefined = undefined,
-  user: UserDocument | undefined = undefined
-) => {
-  if (!user) user = await getRandomUser(session);
-  if (!post) post = await getRandomPost(session);
+interface SeedShareOptions {
+  session: ClientSession | null;
+  post?: PostDocument;
+  user?: UserDocument;
+  postCount?: number;
+  userCount?: number;
+}
+export const seedShare = async ({
+  session = null,
+  post,
+  user,
+  postCount,
+  userCount,
+}: SeedShareOptions) => {
+  if (!user) user = await getRandomUser({ session, count: userCount });
+  if (!post) post = await getRandomPost({ session, count: postCount });
 
   const sharedPost = new PostModel({
     userId: user.id,
     sourceId: post.id,
     type: PostType.SHARE,
-    privacy: 0,
+    privacy: 'PUBLIC',
     content: lorem.paragraph(10),
   });
 
@@ -35,16 +44,29 @@ export const seedShare = async (
   return sharedPost.id;
 };
 
-export const seedShares = async (
-  session: ClientSession | null = null,
-  size: number = 10,
-  post: PostDocument | undefined = undefined,
-  user: UserDocument | undefined = undefined
-): Promise<string[]> => {
+interface SeedSharesOptions {
+  session: ClientSession | null;
+  size: number;
+  post?: PostDocument;
+  user?: UserDocument;
+  postCount?: number;
+  userCount?: number;
+}
+export const seedShares = async ({
+  session = null,
+  size = 10,
+  post,
+  user,
+  postCount,
+  userCount,
+}: SeedSharesOptions): Promise<string[]> => {
   const shareIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(async () => await seedShare(session, post, user))
+      .map(
+        async () =>
+          await seedShare({ session, post, user, postCount, userCount })
+      )
   );
   console.log(`${size} shares created.`);
   return shareIds;

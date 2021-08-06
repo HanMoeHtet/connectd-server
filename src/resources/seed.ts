@@ -10,6 +10,13 @@ import {
 } from './reaction/reaction.factory';
 import db from '@src/config/database';
 import { ClientSession } from 'mongoose';
+import {
+  USER_SIZE,
+  POST_SIZE,
+  REACTION_SIZE,
+  COMMENT_SIZE,
+  SHARE_SIZE,
+} from './seed.config.js';
 
 const clear = async (session: ClientSession) => {
   await clearUsers(session);
@@ -19,30 +26,62 @@ const clear = async (session: ClientSession) => {
   await clearShares(session);
 };
 
-const USER_SIZE = 10;
-const POST_SIZE = 10;
-const REACTION_SIZE = 10;
-const COMMENT_SIZE = 10;
-const SHARE_SIZE = 10;
-
 const seed = async (session: ClientSession, models: string[]) => {
   if (models.length === 0) {
-    await seedUsers(session, USER_SIZE);
-    await seedPosts(session, POST_SIZE);
-    await seedReactionsInPost(session, REACTION_SIZE);
-    await seedComments(session, COMMENT_SIZE);
-    await seedShares(session, SHARE_SIZE);
+    await seedUsers({ session, size: USER_SIZE });
+    await seedPosts({ session, size: POST_SIZE, userCount: USER_SIZE });
+    await seedReactionsInPost({
+      session,
+      size: REACTION_SIZE,
+      postCount: POST_SIZE,
+      userCount: USER_SIZE,
+    });
+    await seedComments({
+      session,
+      size: COMMENT_SIZE,
+      postCount: POST_SIZE,
+      userCount: USER_SIZE,
+    });
+    await seedShares({
+      session,
+      size: SHARE_SIZE,
+      postCount: POST_SIZE,
+      userCount: USER_SIZE,
+    });
   } else {
     if (models.includes('user')) {
-      await seedUsers(session, USER_SIZE);
+      await seedUsers({ session, size: USER_SIZE });
     }
 
     if (models.includes('post')) {
-      await seedPosts(session, POST_SIZE);
+      await seedPosts({ session, size: POST_SIZE, userCount: USER_SIZE });
     }
 
     if (models.includes('comment')) {
-      await seedComments(session, COMMENT_SIZE);
+      await seedComments({
+        session,
+        size: COMMENT_SIZE,
+        postCount: POST_SIZE,
+        userCount: USER_SIZE,
+      });
+    }
+
+    if (models.includes('share')) {
+      await seedShares({
+        session,
+        size: SHARE_SIZE,
+        postCount: POST_SIZE,
+        userCount: USER_SIZE,
+      });
+    }
+
+    if (models.includes('reaction')) {
+      await seedReactionsInPost({
+        session,
+        size: REACTION_SIZE,
+        postCount: POST_SIZE,
+        userCount: USER_SIZE,
+      });
     }
   }
 };

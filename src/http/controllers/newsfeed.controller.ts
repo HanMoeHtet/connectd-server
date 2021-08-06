@@ -18,6 +18,8 @@ export const getPosts = async (req: Request, res: Response) => {
     .exec();
 
   return res.json({
-    data: posts,
+    data: {
+      posts,
+    }
   });
 };

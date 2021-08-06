@@ -130,6 +130,8 @@ export const getPostsByUser = async (
   }
 
   return res.json({
-    data: user.posts,
+    data: {
+      posts: user.posts,
+    }
   });
 };

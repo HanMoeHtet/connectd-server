@@ -1,0 +1,5 @@
+export const USER_SIZE = 5;
+export const POST_SIZE = 10;
+export const REACTION_SIZE = 50;
+export const COMMENT_SIZE = 30;
+export const SHARE_SIZE = 5;

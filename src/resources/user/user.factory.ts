@@ -3,9 +3,12 @@ import { name, internet, date } from 'faker';
 import { hash } from 'bcrypt';
 import { ClientSession } from 'mongoose';
 
-export const seedUser = async (
-  session: ClientSession | null = null
-): Promise<string> => {
+interface SeedUserOptions {
+  session: ClientSession | null;
+}
+export const seedUser = async ({
+  session = null,
+}: SeedUserOptions): Promise<string> => {
   const gender = Math.floor(Math.random() * 2);
 
   const user = new User({
@@ -26,21 +29,32 @@ export const seedUser = async (
   return user.id;
 };
 
-export const seedUsers = async (
-  session: ClientSession | null = null,
-  size: number = 10
-) => {
+interface SeedUsersOptions {
+  session: ClientSession | null;
+  size: number;
+}
+export const seedUsers = async ({
+  session = null,
+  size = 10,
+}: SeedUsersOptions) => {
   const userIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(() => seedUser(session))
+      .map(() => seedUser({ session }))
   );
   console.log(`${size} users created.`);
   return userIds;
 };
 
-export const getRandomUser = async (session: ClientSession | null = null) => {
-  const count = await User.countDocuments().session(session);
+interface GetRandomUserOptions {
+  session: ClientSession | null;
+  count: number | undefined;
+}
+export const getRandomUser = async ({
+  session = null,
+  count,
+}: GetRandomUserOptions) => {
+  if (!count) count = await User.countDocuments().session(session);
   const skip = Math.floor(Math.random() * count);
   const user = await User.findOne({}).skip(skip).session(session).exec();
   if (!user) throw Error('No users in db.');

@@ -8,13 +8,22 @@ import { getRandomUser } from '../user/user.factory';
 import { getRandomPost } from '../post/post.factory';
 import { ClientSession } from 'mongoose';
 
-export const seedReactionInPost = async (
-  session: ClientSession | null = null,
-  post: PostDocument | undefined = undefined,
-  user: UserDocument | undefined = undefined
-) => {
-  if (!user) user = await getRandomUser(session);
-  if (!post) post = await getRandomPost(session);
+interface SeedReactionInPostOptions {
+  session: ClientSession | null;
+  post?: PostDocument;
+  user?: UserDocument;
+  userCount?: number;
+  postCount?: number;
+}
+export const seedReactionInPost = async ({
+  session = null,
+  post,
+  postCount,
+  user,
+  userCount,
+}: SeedReactionInPostOptions) => {
+  if (!user) user = await getRandomUser({ session, count: userCount });
+  if (!post) post = await getRandomPost({ session, count: postCount });
 
   const reactionTypes = Object.values(ReactionType);
 
@@ -31,6 +40,7 @@ export const seedReactionInPost = async (
   await reaction.save({ session });
 
   post.reactionIds.push(reaction.id);
+  console.log(post);
   await post.save({ session });
 
   user.reactionIds.push(reaction.id);
@@ -39,16 +49,35 @@ export const seedReactionInPost = async (
   return reaction.id;
 };
 
-export const seedReactionsInPost = async (
-  session: ClientSession | null = null,
-  size: number = 10,
-  post: PostDocument | undefined = undefined,
-  user: UserDocument | undefined = undefined
-): Promise<string[]> => {
+interface SeedReactionsInPostOptions {
+  session: ClientSession | null;
+  size: number;
+  post?: PostDocument;
+  postCount?: number;
+  user?: UserDocument;
+  userCount?: number;
+}
+export const seedReactionsInPost = async ({
+  session = null,
+  size = 10,
+  post,
+  postCount,
+  user,
+  userCount,
+}: SeedReactionsInPostOptions): Promise<string[]> => {
   const reactionIds = await Promise.all(
     Array(size)
       .fill(0)
-      .map(async () => await seedReactionInPost(session, post, user))
+      .map(
+        async () =>
+          await seedReactionInPost({
+            session,
+            post,
+            user,
+            postCount,
+            userCount,
+          })
+      )
   );
   console.log(`${size} reactions created.`);
   return reactionIds;
