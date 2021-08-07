@@ -2,6 +2,7 @@ import { model, Schema } from '@src/config/database';
 import { Document, PopulatedDoc } from 'mongoose';
 import { CommentDocument } from '../comment/comment.model';
 import { ReactionDocument, ReactionType } from '../reaction/reaction.model';
+import { UserDocument } from '../user/user.model';
 
 export enum Privacy {
   PUBLIC = 'PUBLIC',
@@ -16,12 +17,17 @@ export enum PostType {
 
 export interface BasePost {
   userId: string;
+  user?: PopulatedDoc<UserDocument>;
   createdAt: Date;
   privacy: Privacy;
   content: string;
+  reactionCounts: Map<ReactionType, number>;
+  reactionIds: string[];
   reactions: Map<ReactionType, string[]>;
+  commentCount: number;
   commentIds: string[];
   comments?: PopulatedDoc<CommentDocument>[];
+  shareCount: number;
   /**
    * Store shared post ids
    */
@@ -64,6 +70,11 @@ export const PostSchema = new Schema<Post>({
     type: String,
     required: true,
   },
+  reactionCounts: {
+    type: Map,
+    of: Number,
+    default: new Map(),
+  },
   reactions: {
     type: Map,
     of: [
@@ -74,12 +85,26 @@ export const PostSchema = new Schema<Post>({
     ],
     default: new Map(),
   },
+  reactionIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Reaction',
+    },
+  ],
+  commentCount: {
+    type: Number,
+    default: 0,
+  },
   commentIds: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Comment',
     },
   ],
+  shareCount: {
+    type: Number,
+    default: 0,
+  },
   shareIds: [
     {
       type: Schema.Types.ObjectId,
@@ -90,6 +115,13 @@ export const PostSchema = new Schema<Post>({
     type: Date,
     default: Date.now,
   },
+});
+
+PostSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true,
 });
 
 PostSchema.virtual('comments', {

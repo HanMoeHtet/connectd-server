@@ -31,6 +31,7 @@ export const seedComment = async ({
 
   await comment.save({ session });
 
+  post.commentCount++;
   post.commentIds.push(comment.id);
   await post.save({ session });
 

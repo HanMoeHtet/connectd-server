@@ -15,6 +15,20 @@ export const getPosts = async (req: Request, res: Response) => {
     .sort({ createdAt: 'desc' })
     .skip(skip)
     .limit(limit)
+    .populate('user', { id: 1, username: 1, avatar: 1 })
+    .select({
+      id: 1,
+      userId: 1,
+      type: 1,
+      sourceId: 1,
+      privacy: 1,
+      content: 1,
+      reactionCounts: 1,
+      commentCount: 1,
+      shareCount: 1,
+      createdAt: 1,
+      user: 1,
+    })
     .exec();
 
   return res.json({

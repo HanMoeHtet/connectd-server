@@ -35,6 +35,7 @@ export const seedShare = async ({
 
   await sharedPost.save({ session });
 
+  post.shareCount++;
   post.shareIds.push(sharedPost.id);
   await post.save({ session });
 

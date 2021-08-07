@@ -39,6 +39,13 @@ export const seedReactionInPost = async ({
 
   await reaction.save({ session });
 
+  post.reactionCounts.set(
+    randomReactionType,
+    (post.reactionCounts.get(randomReactionType) || 0) + 1
+  );
+
+  post.reactionIds.push(reaction.id);
+
   post.reactions.set(randomReactionType, [
     ...(post.reactions.get(randomReactionType) || []),
     reaction.id,
