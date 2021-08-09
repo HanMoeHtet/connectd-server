@@ -19,7 +19,7 @@ export const seedPost = async ({
   }
 
   const post = new Post({
-    userId: user.id,
+    userId: user._id,
     type: PostType.POST,
     privacy: 'PUBLIC',
     content: lorem.paragraph(10),
@@ -27,10 +27,10 @@ export const seedPost = async ({
 
   await post.save({ session });
 
-  user.postIds.push(post.id);
+  user.postIds.push(post._id);
   await user.save({ session });
 
-  return post.id;
+  return post._id;
 };
 
 interface SeedPostsOptions {

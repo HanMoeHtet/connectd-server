@@ -20,62 +20,65 @@ export interface User extends UnverifiedUser {
   replies?: PopulatedDoc<ReplyDocument>[];
 }
 
-const UserSchema = new Schema<User>({
-  username: {
-    type: String,
-    required: true,
-  },
-  avatar: String,
-  email: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
-  emailVerifiedAt: Date,
-  phoneNumber: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
-  phoneNumberVerfiedAt: Date,
-  hash: {
-    type: String,
-    required: true,
-  },
-  birthday: {
-    type: Date,
-    required: true,
-  },
-  pronouns: {
-    subjective: { type: String, required: true },
-    objective: { type: String, required: true },
-    possessive: { type: String, required: true },
-  },
-  postIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Post',
+const UserSchema = new Schema<User>(
+  {
+    username: {
+      type: String,
+      required: true,
     },
-  ],
-  reactionIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Reaction',
+    avatar: String,
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
-  ],
-  commentIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Comment',
+    emailVerifiedAt: Date,
+    phoneNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
-  ],
-  replyIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Reply',
+    phoneNumberVerfiedAt: Date,
+    hash: {
+      type: String,
+      required: true,
     },
-  ],
-});
+    birthday: {
+      type: Date,
+      required: true,
+    },
+    pronouns: {
+      subjective: { type: String, required: true },
+      objective: { type: String, required: true },
+      possessive: { type: String, required: true },
+    },
+    postIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Post',
+      },
+    ],
+    reactionIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Reaction',
+      },
+    ],
+    commentIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Comment',
+      },
+    ],
+    replyIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Reply',
+      },
+    ],
+  },
+  { id: false }
+);
 
 UserSchema.virtual('posts', {
   ref: 'Post',
@@ -102,7 +105,9 @@ UserSchema.virtual('replies', {
 });
 
 UserSchema.set('toObject', { virtuals: true });
-UserSchema.set('toJSON', { virtuals: true });
+UserSchema.set('toJSON', {
+  virtuals: true,
+});
 
 export const UserModel: Model<User> = model<User>('User', UserSchema);
 

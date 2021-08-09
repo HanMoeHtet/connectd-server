@@ -54,7 +54,7 @@ export const sendOTP = async (user: UnverifiedUserDocument) => {
   const hashedOTP = await hash(otp, BCRYPT_ROUNDS);
 
   const phoneNumberVerification = new PhoneNumberVerification({
-    userId: user.id,
+    userId: user._id,
     hash: hashedOTP,
   });
 

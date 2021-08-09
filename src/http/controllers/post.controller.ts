@@ -6,7 +6,9 @@ import {
 } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import Post, { PostType } from '@src/resources/post/post.model';
-import { ReactionType } from '@src/resources/reaction/reaction.model';
+import ReactionModel, {
+  ReactionType,
+} from '@src/resources/reaction/reaction.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { NextFunction, Response } from 'express';
@@ -101,86 +103,48 @@ export const getReactionsInPost = async (
       },
     });
 
-  const _skip = Number(req.query.skip) || 0;
+  const _skip = Number(skip) || 0;
   const _limit = Math.min(
     Number(limit) || MAX_REACTIONS_PER_POST_PER_REQUEST,
     MAX_REACTIONS_PER_POST_PER_REQUEST
   );
+  const _reactionType = reactionType?.toUpperCase();
 
-  let reactions;
-  let hasMore;
-  if (!reactionType || !(reactionType in ReactionType)) {
-    if (post.type === PostType.POST) {
-      post = await post
-        .populate({
-          path: 'reactionIds',
-          options: {
-            sort: {
-              createdAt: -1,
-            },
-            skip: _skip,
-            limit: _limit,
-          },
-        })
-        .execPopulate();
-    } else if (post.type === PostType.SHARE) {
-      post = await post
-        .populate({
-          path: 'reactionIds',
-          options: {
-            skip: _skip,
-            limit: _limit,
-          },
-        })
-        .execPopulate();
-    }
-
-    reactions = post.reactionIds;
-    hasMore = post.reactionIds.length > _limit + _skip;
+  let reactionIds;
+  if (!_reactionType || !(_reactionType in ReactionType)) {
+    reactionIds = post.reactionIds;
   } else {
-    if (post.type === PostType.POST) {
-      post = await post
-        .populate({
-          path: `reactions.${reactionType}`,
-          options: {
-            sort: {
-              createdAt: -1,
-            },
-            skip: _skip,
-            limit: _limit,
-          },
-        })
-        .execPopulate();
-    }
-
-    if (post.type === PostType.SHARE) {
-      post = await post
-        .populate({
-          path: 'reactions',
-          options: {
-            skip: _skip,
-            limit: _limit,
-          },
-        })
-        .execPopulate();
-    }
-
-    reactions = post.reactions.get(reactionType as ReactionType);
-    hasMore = post.reactions.get(reactionType as ReactionType)!.length > _limit;
+    reactionIds = post.reactions.get(_reactionType as ReactionType);
   }
+
+  const reactions = await ReactionModel.find({
+    _id: {
+      $in: reactionIds,
+    },
+  })
+    .sort({ createdAt: -1 })
+    .skip(_skip)
+    .limit(_limit)
+    .populate({
+      path: 'user',
+      select: { username: 1, avatar: 1 },
+    })
+    .select({
+      type: 1,
+      userId: 1,
+    });
 
   return res.status(SUCCESS).json({
     data: {
       reactions,
       post: {
-        id: post.id,
+        _id: post._id,
         content: post.content,
         privacy: post.privacy,
         reactionCounts: post.reactionCounts,
         commentCount: post.commentCount,
         shareCount: post.shareCount,
       },
-      hasMore,
     },
   });
 };

@@ -92,7 +92,7 @@ export const verify = async (
 
   return res.status(SUCCESS).json({
     data: {
-      token: sign({ userId: user.id }, process.env.APP_SECRET!),
+      token: sign({ userId: user._id }, process.env.APP_SECRET!),
     },
   });
 };

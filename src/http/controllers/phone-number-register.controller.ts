@@ -69,7 +69,7 @@ export const register = async (
       phoneNumber: newUser.phoneNumber,
     }),
     data: {
-      userId: newUser.id,
+      userId: newUser._id,
     },
   });
 };

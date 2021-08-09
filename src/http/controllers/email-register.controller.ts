@@ -72,7 +72,7 @@ export const register = async (
   return res.status(CREATED).json({
     message: i18next.t('verificationSuccess.email', { email: newUser.email }),
     data: {
-      userId: newUser.id,
+      userId: newUser._id,
     },
   });
 };

@@ -26,8 +26,8 @@ export const seedShare = async ({
   if (!post) post = await getRandomPost({ session, count: postCount });
 
   const sharedPost = new PostModel({
-    userId: user.id,
-    sourceId: post.id,
+    userId: user._id,
+    sourceId: post._id,
     type: PostType.SHARE,
     privacy: 'PUBLIC',
     content: lorem.paragraph(10),
@@ -36,13 +36,13 @@ export const seedShare = async ({
   await sharedPost.save({ session });
 
   post.shareCount++;
-  post.shareIds.push(sharedPost.id);
+  post.shareIds.push(sharedPost._id);
   await post.save({ session });
 
-  user.postIds.push(sharedPost.id);
+  user.postIds.push(sharedPost._id);
   await user.save({ session });
 
-  return sharedPost.id;
+  return sharedPost._id;
 };
 
 interface SeedSharesOptions {

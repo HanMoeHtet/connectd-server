@@ -46,76 +46,79 @@ export interface SharedPost extends BasePost {
 
 export type Post = NormalPost | SharedPost;
 
-export const PostSchema = new Schema<Post>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  type: {
-    type: String,
-    enum: Object.values(PostType),
-    required: true,
-  },
-  sourceId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Post',
-  },
-  privacy: {
-    type: String,
-    enum: Object.values(Privacy),
-    required: true,
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-  reactionCounts: {
-    type: Map,
-    of: Number,
-    default: new Map(),
-  },
-  reactions: {
-    type: Map,
-    of: [
+export const PostSchema = new Schema<Post>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: Object.values(PostType),
+      required: true,
+    },
+    sourceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Post',
+    },
+    privacy: {
+      type: String,
+      enum: Object.values(Privacy),
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+    reactionCounts: {
+      type: Map,
+      of: Number,
+      default: new Map(),
+    },
+    reactions: {
+      type: Map,
+      of: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'Reaction',
+        },
+      ],
+      default: new Map(),
+    },
+    reactionIds: [
       {
         type: Schema.Types.ObjectId,
         ref: 'Reaction',
       },
     ],
-    default: new Map(),
-  },
-  reactionIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Reaction',
+    commentCount: {
+      type: Number,
+      default: 0,
     },
-  ],
-  commentCount: {
-    type: Number,
-    default: 0,
-  },
-  commentIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Comment',
+    commentIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Comment',
+      },
+    ],
+    shareCount: {
+      type: Number,
+      default: 0,
     },
-  ],
-  shareCount: {
-    type: Number,
-    default: 0,
-  },
-  shareIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Share',
+    shareIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Share',
+      },
+    ],
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
   },
-});
+  { id: false }
+);
 
 PostSchema.virtual('user', {
   ref: 'User',
@@ -137,7 +140,9 @@ PostSchema.virtual('shares', {
 });
 
 PostSchema.set('toObject', { virtuals: true });
-PostSchema.set('toJSON', { virtuals: true });
+PostSchema.set('toJSON', {
+  virtuals: true,
+});
 
 export const PostModel = model<Post>('Post', PostSchema);
 

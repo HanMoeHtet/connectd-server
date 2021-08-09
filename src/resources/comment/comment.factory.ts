@@ -24,21 +24,21 @@ export const seedComment = async ({
   if (!post) post = await getRandomPost({ session, count: postCount });
 
   const comment = new Comment({
-    userId: user.id,
-    postId: post.id,
+    userId: user._id,
+    postId: post._id,
     content: lorem.sentence(),
   });
 
   await comment.save({ session });
 
   post.commentCount++;
-  post.commentIds.push(comment.id);
+  post.commentIds.push(comment._id);
   await post.save({ session });
 
-  user.commentIds.push(comment.id);
+  user.commentIds.push(comment._id);
   await user.save({ session });
 
-  return comment.id;
+  return comment._id;
 };
 
 interface SeedCommentsOptions {

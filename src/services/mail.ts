@@ -62,12 +62,12 @@ const getHTMLForVerificationMail = (
 
 export const sendVerificationMail = async (user: UnverifiedUserDocument) => {
   const emailVerification = new EmailVerification({
-    userId: user.id,
+    userId: user._id,
   });
 
   await emailVerification.save();
 
-  const token = sign({ userId: user.id }, process.env.APP_SECRET!);
+  const token = sign({ userId: user._id }, process.env.APP_SECRET!);
   const emailVerificationEndpoint = `${process.env.EMAILL_VERIFICATION_END_POINT}?token=${token}`;
 
   const subject = 'Confirm your email';

@@ -26,7 +26,7 @@ export const seedUser = async ({
 
   await user.save({ session });
 
-  return user.id;
+  return user._id;
 };
 
 interface SeedUsersOptions {

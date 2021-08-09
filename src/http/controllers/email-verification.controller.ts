@@ -54,7 +54,7 @@ export const verify = async (
   let emailVerification;
   try {
     emailVerification = await EmailVerification.findOne({
-      userId: user.id,
+      userId: user._id,
     });
   } catch (e) {
     console.error('Error finding email verification:', e);

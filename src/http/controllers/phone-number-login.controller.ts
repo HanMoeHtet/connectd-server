@@ -52,6 +52,6 @@ export const logIn = async (
   }
 
   return res.status(SUCCESS).json({
-    data: { token: sign({ userId: user.id }, process.env.APP_SECRET!) },
+    data: { token: sign({ userId: user._id }, process.env.APP_SECRET!) },
   });
 };

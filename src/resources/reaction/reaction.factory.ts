@@ -31,9 +31,9 @@ export const seedReactionInPost = async ({
     reactionTypes[Math.floor(Math.random() * reactionTypes.length)]!;
 
   let reaction = new ReactionModel({
-    userId: user.id,
+    userId: user._id,
     sourceType: 'Post',
-    sourceId: post.id,
+    sourceId: post._id,
     type: randomReactionType,
   });
 
@@ -44,19 +44,19 @@ export const seedReactionInPost = async ({
     (post.reactionCounts.get(randomReactionType) || 0) + 1
   );
 
-  post.reactionIds.push(reaction.id);
+  post.reactionIds.push(reaction._id);
 
   post.reactions.set(randomReactionType, [
     ...(post.reactions.get(randomReactionType) || []),
-    reaction.id,
+    reaction._id,
   ]);
 
   await post.save({ session });
 
-  user.reactionIds.push(reaction.id);
+  user.reactionIds.push(reaction._id);
   await user.save({ session });
 
-  return reaction.id;
+  return reaction._id;
 };
 
 interface SeedReactionsInPostOptions {
