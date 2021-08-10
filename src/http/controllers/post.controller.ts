@@ -1,8 +1,12 @@
 import {
   BAD_REQUEST,
+  CREATED,
   MAX_COMMENTS_PER_POST_PER_REQUEST,
   MAX_REACTIONS_PER_POST_PER_REQUEST,
   SUCCESS,
+  UNAUTHORIZED,
+  SERVER_ERROR,
+  NOT_FOUND,
 } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import Post, { PostType } from '@src/resources/post/post.model';
@@ -11,7 +15,9 @@ import ReactionModel, {
 } from '@src/resources/reaction/reaction.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
+import { AuthResponse } from '@src/types/responses';
 import { NextFunction, Response } from 'express';
+import { compareMongooseIds } from '@src/utils/helpers';
 
 const findPost = async (postId?: string) => {
   if (!postId) {
@@ -137,6 +143,201 @@ export const getReactionsInPost = async (
   return res.status(SUCCESS).json({
     data: {
       reactions,
+      post: {
+        _id: post._id,
+        content: post.content,
+        privacy: post.privacy,
+        reactionCounts: post.reactionCounts,
+        commentCount: post.commentCount,
+        shareCount: post.shareCount,
+      },
+    },
+  });
+};
+
+interface AddReactionToPostRequest
+  extends Request<{
+    params: {
+      postId?: string;
+    };
+    reqBody: {
+      type?: string;
+    };
+  }> {}
+export const addReactionToPost = async (
+  req: AddReactionToPostRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { postId } = req.params;
+  let { type } = req.body;
+
+  type = type?.toUpperCase();
+
+  if (!type || !(type in ReactionType)) {
+    next(
+      new RequestError(
+        BAD_REQUEST,
+        i18next.t('missing', { field: 'reaction type' })
+      )
+    );
+    return;
+  }
+
+  const _type: ReactionType = <ReactionType>type;
+  let post;
+
+  try {
+    post = await findPost(postId);
+  } catch (err) {
+    next(err);
+    return;
+  }
+
+  const basePopulateOptions = {
+    path: 'populatedReactions',
+    select: {
+      userId: 1,
+    },
+  };
+
+  if (post.type === PostType.POST) {
+    post = await post.populate(basePopulateOptions).execPopulate();
+  } else {
+    post = await post.populate(basePopulateOptions).execPopulate();
+  }
+
+  if (!post.populatedReactions) {
+    next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
+    return;
+  }
+
+  const userReactedReaction = post.populatedReactions.find(
+    (reaction) => compareMongooseIds(reaction.userId , res.locals.user._id)
+  );
+
+  if (userReactedReaction) {
+    userReactedReaction.type = type;
+    userReactedReaction.createdAt = Date.now();
+    await userReactedReaction.save();
+  } else {
+    let reaction = new ReactionModel({
+      userId: res.locals.user._id,
+      sourceType: 'Post',
+      sourceId: post._id,
+      type,
+    });
+
+    await reaction.save();
+
+    post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 0) + 1);
+
+    post.reactionIds.push(reaction._id);
+
+    post.reactions.set(_type, [
+      ...(post.reactions.get(_type) || []),
+      reaction._id,
+    ]);
+
+    await post.save();
+
+    res.locals.user.reactionIds.push(reaction._id);
+    await res.locals.user.save();
+  }
+
+  return res.status(CREATED).json({
+    message: i18next.t('reaction.added'),
+    data: {
+      post: {
+        _id: post._id,
+        content: post.content,
+        privacy: post.privacy,
+        reactionCounts: post.reactionCounts,
+        commentCount: post.commentCount,
+        shareCount: post.shareCount,
+      },
+    },
+  });
+};
+
+interface RemoveReactionFromPostRequest
+  extends Request<{
+    params: {
+      postId?: string;
+    };
+  }> {}
+export const removeReactionFromPost = async (
+  req: RemoveReactionFromPostRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { postId } = req.params;
+
+  let post;
+
+  try {
+    post = await findPost(postId);
+  } catch (err) {
+    next(err);
+    return;
+  }
+
+  const basePopulateOptions = {
+    path: 'populatedReactions',
+    select: {
+      userId: 1,
+      type: 1,
+    },
+  };
+
+  if (post.type === PostType.POST) {
+    post = await post.populate(basePopulateOptions).execPopulate();
+  } else {
+    post = await post.populate(basePopulateOptions).execPopulate();
+  }
+
+  if (!post.populatedReactions) {
+    next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
+    return;
+  }
+
+  const userReactedReaction = post.populatedReactions.find((reaction) => {
+    return compareMongooseIds(reaction.userId, res.locals.user._id);
+  });
+
+  if (!userReactedReaction) {
+    next(new RequestError(NOT_FOUND, i18next.t('httpError.404')));
+    return;
+  } else {
+    const _type = userReactedReaction.type;
+    console.log(userReactedReaction);
+
+    post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 1) - 1);
+
+    post.reactionIds = post.reactionIds.filter(
+      (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+    );
+
+    post.reactions.set(
+      _type,
+      (post.reactions.get(_type) || []).filter(
+        (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+      )
+    );
+
+    await post.save();
+
+    res.locals.user.reactionIds = res.locals.user.reactionIds.filter(
+      (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+    );
+    await res.locals.user.save();
+
+    await userReactedReaction.delete();
+  }
+
+  return res.status(CREATED).json({
+    message: i18next.t('reaction.removed'),
+    data: {
       post: {
         _id: post._id,
         content: post.content,

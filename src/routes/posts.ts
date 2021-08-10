@@ -8,6 +8,8 @@ router.use(checkAuth);
 
 router.get('/:postId', PostController.show);
 router.get('/:postId/reactions', PostController.getReactionsInPost);
+router.post('/:postId/reactions', PostController.addReactionToPost);
+router.delete('/:postId/reactions', PostController.removeReactionFromPost);
 router.get('/:postId/comments', PostController.getCommentsInPost);
 router.get('/:postId/shares', PostController.getSharesInPost);
 

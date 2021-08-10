@@ -3,7 +3,7 @@ import { PostDocument } from '@src/resources/post/post.model';
 import ReactionModel, {
   ReactionType,
 } from '@src/resources/reaction/reaction.model';
-import { UserDocument } from '@src/resources/user/user.model';
+import User, { UserDocument } from '@src/resources/user/user.model';
 import { getRandomUser } from '../user/user.factory';
 import { getRandomPost } from '../post/post.factory';
 import { ClientSession } from 'mongoose';
@@ -77,7 +77,10 @@ export const seedReactionsInPost = async ({
 }: SeedReactionsInPostOptions): Promise<string[]> => {
   let reactionIds = [];
 
-  for (let i = 0; i < size; i++) {
+  const users = await User.find({}).limit(size);
+
+  for (let i = 0; i < Math.min(size, users.length); i++) {
+    if (!user) user = users[i];
     reactionIds.push(
       await seedReactionInPost({
         session,

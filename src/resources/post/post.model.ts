@@ -23,6 +23,7 @@ export interface BasePost {
   content: string;
   reactionCounts: Map<ReactionType, number>;
   reactionIds: string[];
+  populatedReactions?: PopulatedDoc<ReactionDocument>[];
   reactions: Map<ReactionType, string[]>;
   commentCount: number;
   commentIds: string[];
@@ -125,6 +126,12 @@ PostSchema.virtual('user', {
   localField: 'userId',
   foreignField: '_id',
   justOne: true,
+});
+
+PostSchema.virtual('populatedReactions', {
+  ref: 'Reaction',
+  localField: 'reactionIds',
+  foreignField: '_id',
 });
 
 PostSchema.virtual('comments', {

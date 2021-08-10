@@ -12,6 +12,7 @@
   },
   "httpError": {
     "500": "An error occurred.",
+    "401": "Unauthorized.",
     "404": "Not found."
   },
   "verificationSuccess": {
@@ -40,5 +41,9 @@
     "invalidToken": "Token is invalid."
   },
   "missing": "No {{field}} provided.",
-  "notFound": "{{field, capitalize}} not found."
+  "notFound": "{{field, capitalize}} not found.",
+  "reaction": {
+    "added": "Reaction added.",
+    "removed": "Reaction removed"
+  }
 }
