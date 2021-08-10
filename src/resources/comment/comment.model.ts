@@ -1,5 +1,6 @@
 import { model, Schema } from '@src/config/database';
 import { Document, PopulatedDoc } from 'mongoose';
+import { ReactionType, ReactionDocument } from '../reaction/reaction.model';
 import { ReplyDocument } from '../reply/reply.model';
 
 export interface Comment {
@@ -7,42 +8,81 @@ export interface Comment {
   postId: string;
   createdAt: Date;
   content: string;
+  reactionCounts: Map<ReactionType, number>;
   reactionIds: string[];
+  populatedReactions?: PopulatedDoc<ReactionDocument>[];
+  reactions: Map<ReactionType, string[]>;
+  replyCount: number;
   replyIds: string[];
-  replies: PopulatedDoc<ReplyDocument>[];
+  replies?: PopulatedDoc<ReplyDocument>[];
 }
 
-export const CommentSchema = new Schema<Comment>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  postId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Post',
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  content: {
-    type: String,
-    requred: true,
-  },
-  reactionIds: [
-    {
+export const CommentSchema = new Schema<Comment>(
+  {
+    userId: {
       type: Schema.Types.ObjectId,
-      ref: 'Reaction',
+      ref: 'User',
+      required: true,
     },
-  ],
-  replyIds: [
-    {
+    postId: {
       type: Schema.Types.ObjectId,
-      ref: 'Reply',
+      ref: 'Post',
+      required: true,
     },
-  ],
+    content: {
+      type: String,
+      requred: true,
+    },
+    reactionCounts: {
+      type: Map,
+      of: Number,
+      default: new Map(),
+    },
+    reactions: {
+      type: Map,
+      of: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'Reaction',
+        },
+      ],
+      default: new Map(),
+    },
+    reactionIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Reaction',
+      },
+    ],
+    replyCount: {
+      type: Number,
+      default: 0,
+    },
+    replyIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Reply',
+      },
+    ],
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { id: false }
+);
+
+CommentSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+CommentSchema.virtual('populatedReactions', {
+  ref: 'Reaction',
+  localField: 'reactionIds',
+  foreignField: '_id',
 });
 
 CommentSchema.virtual('replies', {

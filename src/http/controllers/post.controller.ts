@@ -212,8 +212,8 @@ export const addReactionToPost = async (
     return;
   }
 
-  const userReactedReaction = post.populatedReactions.find(
-    (reaction) => compareMongooseIds(reaction.userId , res.locals.user._id)
+  const userReactedReaction = post.populatedReactions.find((reaction) =>
+    compareMongooseIds(reaction.userId, res.locals.user._id)
   );
 
   if (userReactedReaction) {
@@ -384,28 +384,73 @@ export const getCommentsInPost = async (
       },
     });
 
+  const _skip = Number(skip) || 0;
+  const _limit = Math.min(
+    Number(limit) || MAX_COMMENTS_PER_POST_PER_REQUEST,
+    MAX_COMMENTS_PER_POST_PER_REQUEST
+  );
+
+  const populateOptions = {
+    path: 'comments',
+    options: {
+      sort: { createdAt: -1 },
+      skip: _skip,
+      limit: _limit,
+    },
+    populate: {
+      path: 'user',
+      select: {
+        username: 1,
+        avatar: 1,
+      },
+    },
+    select: {
+      id: 1,
+      userId: 1,
+      postId: 1,
+      privacy: 1,
+      content: 1,
+      reactionCounts: 1,
+      reactionIds: 1,
+      replyCount: 1,
+      createdAt: 1,
+      user: 1,
+    }
+  };
+
   if (post.type === PostType.POST) {
-    post = await post
-      .populate({
-        path: 'comments',
-        options: {
-          skip: Number(skip),
-          limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
-        },
-      })
-      .execPopulate();
+    post = await post.populate(populateOptions).execPopulate();
+  } else {
+    post = await post.populate(populateOptions).execPopulate();
+  }
+
+  if (!post.comments) {
+    return res.status(SUCCESS).json({
+      data: {
+        comments: [],
+      },
+    });
+  }
+
+  const comments = post.comments;
+  const commentCount = post.commentCount;
+
+  return res.status(SUCCESS).json({
+    data: {
+      comments,
+      commentCount,
+    },
+  });
+}
+
+  };
+
+  if (post.type === PostType.POST) {
+    post = await post.populate(populateOptions).execPopulate();
   }
 
   if (post.type === PostType.SHARE) {
-    post = await post
-      .populate({
-        path: 'comments',
-        options: {
-          skip: Number(skip),
-          limit: Math.min(Number(limit), MAX_COMMENTS_PER_POST_PER_REQUEST),
-        },
-      })
-      .execPopulate();
+    post = await post.populate(populateOptions).execPopulate();
   }
 
   return res.status(SUCCESS).json({

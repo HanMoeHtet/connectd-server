@@ -17,7 +17,7 @@ export const getPosts = async (req: Request, res: AuthResponse) => {
     .sort({ createdAt: 'desc' })
     .skip(skip)
     .limit(limit)
-    .populate('user', { id: 1, username: 1, avatar: 1 })
+    .populate('user', { username: 1, avatar: 1 })
     .select({
       id: 1,
       userId: 1,
