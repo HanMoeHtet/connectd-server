@@ -69,6 +69,21 @@ export const seedComments = async ({
   return commentIds;
 };
 
+interface GetRandomCommentOptions {
+  session: ClientSession | null;
+  count: number | undefined;
+}
+export const getRandomComment = async ({
+  session = null,
+  count,
+}: GetRandomCommentOptions) => {
+  if (!count) count = await Comment.countDocuments().session(session);
+  const skip = Math.floor(Math.random() * count);
+  const comment = await Comment.findOne({}).skip(skip).session(session).exec();
+  if (!comment) throw Error('No comments in db.');
+  return comment;
+};
+
 export const clearComments = async (session: ClientSession | null = null) => {
   await Comment.deleteMany({}).session(session);
 };

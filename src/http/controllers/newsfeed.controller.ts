@@ -19,7 +19,6 @@ export const getPosts = async (req: Request, res: AuthResponse) => {
     .limit(limit)
     .populate('user', { username: 1, avatar: 1 })
     .select({
-      id: 1,
       userId: 1,
       type: 1,
       sourceId: 1,
@@ -42,7 +41,7 @@ export const getPosts = async (req: Request, res: AuthResponse) => {
         type: 1,
       });
       const userReactedRection = reactions.find(
-        (reaction) => reaction.userId === res.locals.user.id
+        (reaction) => reaction.userId === res.locals.user._id
       );
 
       const { reactionIds, ...rest } = post.toJSON();

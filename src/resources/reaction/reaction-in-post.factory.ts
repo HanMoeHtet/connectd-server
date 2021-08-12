@@ -2,6 +2,7 @@ import { lorem } from 'faker';
 import { PostDocument } from '@src/resources/post/post.model';
 import ReactionModel, {
   ReactionType,
+  ReactionSourceType,
 } from '@src/resources/reaction/reaction.model';
 import User, { UserDocument } from '@src/resources/user/user.model';
 import { getRandomUser } from '../user/user.factory';
@@ -32,7 +33,7 @@ export const seedReactionInPost = async ({
 
   let reaction = new ReactionModel({
     userId: user._id,
-    sourceType: 'Post',
+    sourceType: ReactionSourceType.POST,
     sourceId: post._id,
     type: randomReactionType,
   });
@@ -59,7 +60,7 @@ export const seedReactionInPost = async ({
   return reaction._id;
 };
 
-interface SeedReactionsInPostOptions {
+interface SeedReactionsInPostsOptions {
   session: ClientSession | null;
   size: number;
   post?: PostDocument;
@@ -67,14 +68,14 @@ interface SeedReactionsInPostOptions {
   user?: UserDocument;
   userCount?: number;
 }
-export const seedReactionsInPost = async ({
+export const seedReactionsInPosts = async ({
   session = null,
   size = 10,
   post,
   postCount,
   user,
   userCount,
-}: SeedReactionsInPostOptions): Promise<string[]> => {
+}: SeedReactionsInPostsOptions): Promise<string[]> => {
   let reactionIds = [];
 
   const users = await User.find({}).limit(size);
@@ -92,10 +93,14 @@ export const seedReactionsInPost = async ({
     );
   }
 
-  console.log(`${size} reactions created.`);
+  console.log(`${size} reactions in post created.`);
   return reactionIds;
 };
 
-export const clearReactions = async (session: ClientSession | null = null) => {
-  await ReactionModel.deleteMany({}).session(session);
+export const clearReactionsInPosts = async (
+  session: ClientSession | null = null
+) => {
+  await ReactionModel.deleteMany({
+    sourceType: ReactionSourceType.POST,
+  }).session(session);
 };

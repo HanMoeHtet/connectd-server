@@ -1,0 +1,5 @@
+import { ClientSession } from 'mongoose';
+
+export const run = async (session: ClientSession) => {
+  // Do something
+};

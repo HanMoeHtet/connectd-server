@@ -5,9 +5,13 @@ import { clearPosts, seedPosts } from './post/post.factory';
 import { clearShares, seedShares } from './post/share.factory';
 import { clearUsers, seedUsers } from './user/user.factory';
 import {
-  clearReactions,
-  seedReactionsInPost,
-} from './reaction/reaction.factory';
+  clearReactionsInPosts,
+  seedReactionsInPosts,
+} from './reaction/reaction-in-post.factory';
+import {
+  clearReactionsInComments,
+  seedReactionsInComments,
+} from './reaction/reaction-in-comment.factory';
 import db from '@src/config/database';
 import { ClientSession } from 'mongoose';
 import {
@@ -21,7 +25,8 @@ import {
 const clear = async (session: ClientSession) => {
   await clearUsers(session);
   await clearPosts(session);
-  await clearReactions(session);
+  await clearReactionsInPosts(session);
+  await clearReactionsInComments(session);
   await clearComments(session);
   await clearShares(session);
 };
@@ -30,7 +35,7 @@ const seed = async (session: ClientSession, models: string[]) => {
   if (models.length === 0) {
     await seedUsers({ session, size: USER_SIZE });
     await seedPosts({ session, size: POST_SIZE, userCount: USER_SIZE });
-    await seedReactionsInPost({
+    await seedReactionsInPosts({
       session,
       size: REACTION_SIZE,
       postCount: POST_SIZE,
@@ -40,6 +45,12 @@ const seed = async (session: ClientSession, models: string[]) => {
       session,
       size: COMMENT_SIZE,
       postCount: POST_SIZE,
+      userCount: USER_SIZE,
+    });
+    await seedReactionsInComments({
+      session,
+      size: REACTION_SIZE,
+      commentCount: COMMENT_SIZE,
       userCount: USER_SIZE,
     });
     await seedShares({
@@ -75,15 +86,30 @@ const seed = async (session: ClientSession, models: string[]) => {
       });
     }
 
-    if (models.includes('reaction')) {
-      await seedReactionsInPost({
+    if (models.includes('reaction-in-post')) {
+      await seedReactionsInPosts({
         session,
         size: REACTION_SIZE,
         postCount: POST_SIZE,
         userCount: USER_SIZE,
       });
     }
+
+    if (models.includes('reaction-in-comment')) {
+      await seedReactionsInComments({
+        session,
+        size: REACTION_SIZE,
+        commentCount: COMMENT_SIZE,
+        userCount: USER_SIZE,
+      });
+    }
   }
+};
+
+const oneTimeRun = async (session: ClientSession) => {
+  // @ts-ignore
+  const { run } = await import('./one-time-run');
+  await run(session);
 };
 
 const run = async () => {
@@ -103,6 +129,9 @@ const run = async () => {
         case 'refresh':
           await clear(session);
           await seed(session, models);
+          break;
+        case 'oneTime':
+          await oneTimeRun(session);
           break;
         default:
           console.log(`Unknown argument: ${cmd}`);
