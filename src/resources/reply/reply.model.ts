@@ -34,6 +34,11 @@ export const ReplySchema = new Schema<Reply>({
   ],
 });
 
+ReplySchema.set('toObject', { virtuals: true });
+ReplySchema.set('toJSON', {
+  virtuals: true,
+});
+
 export const ReplyModel = model<Reply>('Reply', ReplySchema);
 
 export type ReplyDocument = Reply & Document<any, any, Reply>;

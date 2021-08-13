@@ -137,6 +137,7 @@ export const addReactionToPost = async (
     path: 'populatedReactions',
     select: {
       userId: 1,
+      type: 1,
     },
   };
 
@@ -156,33 +157,51 @@ export const addReactionToPost = async (
   );
 
   if (userReactedReaction) {
-    userReactedReaction.type = type;
-    userReactedReaction.createdAt = Date.now();
-    await userReactedReaction.save();
-  } else {
-    let reaction = new ReactionModel({
-      userId: res.locals.user._id,
-      sourceType: 'Post',
-      sourceId: post._id,
-      type,
-    });
+    const _type = userReactedReaction.type;
 
-    await reaction.save();
+    post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 1) - 1);
 
-    post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 0) + 1);
+    post.reactionIds = post.reactionIds.filter(
+      (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+    );
 
-    post.reactionIds.push(reaction._id);
+    post.reactions.set(
+      _type,
+      (post.reactions.get(_type) || []).filter(
+        (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+      )
+    );
 
-    post.reactions.set(_type, [
-      ...(post.reactions.get(_type) || []),
-      reaction._id,
-    ]);
-
-    await post.save();
-
-    res.locals.user.reactionIds.push(reaction._id);
+    res.locals.user.reactionIds = res.locals.user.reactionIds.filter(
+      (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+    );
     await res.locals.user.save();
+
+    await userReactedReaction.delete();
   }
+
+  let reaction = new ReactionModel({
+    userId: res.locals.user._id,
+    sourceType: 'Post',
+    sourceId: post._id,
+    type,
+  });
+
+  await reaction.save();
+
+  post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 0) + 1);
+
+  post.reactionIds.push(reaction._id);
+
+  post.reactions.set(_type, [
+    ...(post.reactions.get(_type) || []),
+    reaction._id,
+  ]);
+
+  await post.save();
+
+  res.locals.user.reactionIds.push(reaction._id);
+  await res.locals.user.save();
 
   return res.status(CREATED).json({
     message: i18next.t('reaction.added'),
@@ -244,7 +263,6 @@ export const removeReactionFromPost = async (
     return;
   } else {
     const _type = userReactedReaction.type;
-    console.log(userReactedReaction);
 
     post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 1) - 1);
 

@@ -2,9 +2,11 @@ import { model, Schema } from '@src/config/database';
 import { Document, PopulatedDoc } from 'mongoose';
 import { ReactionType, ReactionDocument } from '../reaction/reaction.model';
 import { ReplyDocument } from '../reply/reply.model';
+import { UserDocument } from '../user/user.model';
 
 export interface Comment {
   userId: string;
+  user: PopulatedDoc<UserDocument>;
   postId: string;
   createdAt: Date;
   content: string;
@@ -89,6 +91,11 @@ CommentSchema.virtual('replies', {
   ref: 'Reply',
   localField: 'replyIds',
   foreignField: '_id',
+});
+
+CommentSchema.set('toObject', { virtuals: true });
+CommentSchema.set('toJSON', {
+  virtuals: true,
 });
 
 export const CommentModel = model<Comment>('Comment', CommentSchema);

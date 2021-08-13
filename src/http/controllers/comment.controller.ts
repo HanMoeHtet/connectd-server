@@ -69,11 +69,13 @@ export const getCommentsInPost = async (
     },
     select: {
       userId: 1,
+      postId: 1,
       content: 1,
       reactionCounts: 1,
       reactionIds: 1,
       replyCount: 1,
       user: 1,
+      createdAt: 1,
     },
   };
 

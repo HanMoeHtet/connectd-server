@@ -137,6 +137,7 @@ export const addReactionToComment = async (
     path: 'populatedReactions',
     select: {
       userId: 1,
+      type: 1,
     },
   };
 
@@ -152,36 +153,57 @@ export const addReactionToComment = async (
   );
 
   if (userReactedReaction) {
-    userReactedReaction.type = type;
-    userReactedReaction.createdAt = Date.now();
-    await userReactedReaction.save();
-  } else {
-    let reaction = new ReactionModel({
-      userId: res.locals.user._id,
-      sourceType: 'Post',
-      sourceId: comment._id,
-      type,
-    });
-
-    await reaction.save();
+    const _type = userReactedReaction.type;
+    console.log('asdfasd', userReactedReaction);
 
     comment.reactionCounts.set(
       _type,
-      (comment.reactionCounts.get(_type) || 0) + 1
+      (comment.reactionCounts.get(_type) || 1) - 1
     );
 
-    comment.reactionIds.push(reaction._id);
+    comment.reactionIds = comment.reactionIds.filter(
+      (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+    );
 
-    comment.reactions.set(_type, [
-      ...(comment.reactions.get(_type) || []),
-      reaction._id,
-    ]);
+    comment.reactions.set(
+      _type,
+      (comment.reactions.get(_type) || []).filter(
+        (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+      )
+    );
 
-    await comment.save();
+    res.locals.user.reactionIds = res.locals.user.reactionIds.filter(
+      (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
+    );
 
-    res.locals.user.reactionIds.push(reaction._id);
-    await res.locals.user.save();
+    await userReactedReaction.delete();
   }
+
+  let reaction = new ReactionModel({
+    userId: res.locals.user._id,
+    sourceType: 'Post',
+    sourceId: comment._id,
+    type,
+  });
+
+  await reaction.save();
+
+  comment.reactionCounts.set(
+    _type,
+    (comment.reactionCounts.get(_type) || 0) + 1
+  );
+
+  comment.reactionIds.push(reaction._id);
+
+  comment.reactions.set(_type, [
+    ...(comment.reactions.get(_type) || []),
+    reaction._id,
+  ]);
+
+  await comment.save();
+
+  res.locals.user.reactionIds.push(reaction._id);
+  await res.locals.user.save();
 
   return res.status(CREATED).json({
     message: i18next.t('reaction.added'),
