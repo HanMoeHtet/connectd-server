@@ -16,7 +16,7 @@ interface GetCommentsInPostRequest
       postId?: string;
     };
     query: {
-      prevCommentId?: string;
+      lastCommentId?: string;
       limit?: string;
     };
   }> {}
@@ -25,7 +25,7 @@ export const getCommentsInPost = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { prevCommentId, limit } = req.query;
+  const { lastCommentId, limit } = req.query;
   const { postId } = req.params;
 
   let post;
@@ -49,7 +49,7 @@ export const getCommentsInPost = async (
     MAX_COMMENTS_PER_POST_PER_REQUEST
   );
 
-  const extraQuery = prevCommentId ? { _id: { $lt: prevCommentId } } : {};
+  const extraQuery = lastCommentId ? { _id: { $lt: lastCommentId } } : {};
 
   const populateOptions = {
     path: 'comments',
