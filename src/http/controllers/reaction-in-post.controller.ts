@@ -206,9 +206,7 @@ export const addReactionToPost = async (
   return res.status(CREATED).json({
     message: i18next.t('reaction.added'),
     data: {
-      post: prepareUpdatedFieldsInPost(post, {
-        userReactedReactionType: userReactedReaction.type,
-      }),
+      post: prepareUpdatedFieldsInPost(post),
     },
   });
 };
@@ -290,9 +288,7 @@ export const removeReactionFromPost = async (
   return res.status(CREATED).json({
     message: i18next.t('reaction.removed'),
     data: {
-      post: prepareUpdatedFieldsInPost(post, {
-        userReactedReactionType: userReactedReaction.type,
-      }),
+      post: prepareUpdatedFieldsInPost(post),
     },
   });
 };

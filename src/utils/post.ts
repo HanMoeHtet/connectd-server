@@ -1,9 +1,7 @@
-import { BAD_REQUEST, SUCCESS } from '@src/constants';
+import { BAD_REQUEST } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
-import Post, { PostDocument } from '@src/resources/post/post.model';
+import Post, { PostDocument, PostType } from '@src/resources/post/post.model';
 import i18next from '@src/services/i18next';
-import { Request } from '@src/types/requests';
-import { NextFunction, Response } from 'express';
 
 export const findPost = async (postId?: string) => {
   if (!postId) {
@@ -28,6 +26,37 @@ export const findPost = async (postId?: string) => {
   }
 
   return post;
+};
+
+export const preparePost = (post: PostDocument) => {
+  const {
+    _id,
+    userId,
+    type,
+    privacy,
+    content,
+    reactionCounts,
+    reactionIds,
+    commentCount,
+    shareCount,
+    createdAt,
+    user,
+  } = post;
+
+  return {
+    _id,
+    userId,
+    type,
+    sourceId: post.type === PostType.SHARE ? post.sourceId : undefined,
+    privacy,
+    content,
+    reactionCounts,
+    reactionIds,
+    commentCount,
+    shareCount,
+    createdAt,
+    user,
+  };
 };
 
 interface PrepareUpdatedFieldsInPostAdditionalFields {

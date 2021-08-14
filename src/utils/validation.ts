@@ -1,14 +1,21 @@
 import {
+  BAD_REQUEST,
+  MAX_CONTENT_LENGTH,
   MAX_PASSWORD_LENGTH,
   MAX_USERNAME_LENGTH,
   MIN_AGE,
+  MIN_CONTENT_LENGTH,
   MIN_PASSWORD_LENGTH,
   MIN_USERNAME_LENGTH,
 } from '@src/constants';
+import { ValidationError } from '@src/http/error-handlers/handler';
+import { Privacy } from '@src/resources/post/post.model';
 import User from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { validatePhoneNumber as validateNationalNumber } from '@src/services/sms';
 import {
+  CreatePostError,
+  CreatePostFormData,
   EmailRegistrationFormData,
   PhoneNumberRegistrationFormData,
   Pronouns,
@@ -207,6 +214,60 @@ export const validatePhoneNumberRegistration = async (
   const errors: RegistrationError = await validateRegistration(data);
 
   errors.phoneNumber = await validatePhoneNumber(data.phoneNumber);
+
+  return errors;
+};
+
+export const validatePrivacy = async (privacy?: string): Promise<string[]> => {
+  const field = 'privacy';
+  if (!privacy) {
+    return [i18next.t('validationError.required', { field })];
+  }
+
+  if (!Object.values(Privacy).includes(privacy as Privacy)) {
+    return [i18next.t('validationError.invalid', { field })];
+  }
+
+  return [];
+};
+
+export const validateContent = async (content?: string): Promise<string[]> => {
+  const field = 'content';
+
+  if (!content) {
+    return [i18next.t('validationError.required', { field })];
+  }
+
+  if (content.length < MIN_CONTENT_LENGTH) {
+    return [
+      i18next.t('validationError.length', {
+        min: MIN_CONTENT_LENGTH,
+        max: MAX_CONTENT_LENGTH,
+        field,
+      }),
+    ];
+  }
+
+  return [];
+};
+
+export const validateCreatePost = async (
+  data: Partial<CreatePostFormData>
+): Promise<CreatePostError> => {
+  const errors: CreatePostError = {};
+
+  const { privacy, content } = data;
+
+  errors.privacy = await validatePrivacy(privacy);
+
+  errors.content = await validateContent(content);
+
+  for (let key in errors) {
+    const error = errors[key as keyof CreatePostError];
+    if (error && error.length) {
+      throw new ValidationError(BAD_REQUEST, errors);
+    }
+  }
 
   return errors;
 };

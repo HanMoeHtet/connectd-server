@@ -9,6 +9,8 @@ const router = Router();
 router.use(checkAuth);
 
 router.get('/:postId', PostController.show);
+router.post('/', PostController.create);
+
 router.get('/:postId/reactions', ReactionInPostController.getReactionsInPost);
 router.post('/:postId/reactions', ReactionInPostController.addReactionToPost);
 router.delete(

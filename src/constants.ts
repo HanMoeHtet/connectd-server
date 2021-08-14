@@ -31,3 +31,7 @@ export const MAX_POSTS_PER_PAGE = 10;
 export const MAX_REACTIONS_PER_POST_PER_REQUEST = 20;
 export const MAX_COMMENTS_PER_POST_PER_REQUEST = 10;
 export const MAX_SHARES_PER_POST_PER_REQUEST = 20;
+
+// Post
+export const MIN_CONTENT_LENGTH = 1;
+export const MAX_CONTENT_LENGTH = 1000;

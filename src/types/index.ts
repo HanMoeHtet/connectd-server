@@ -35,3 +35,13 @@ export interface EmailVerificationTokenPayload {
 export interface AuthTokenPayload {
   userId?: string;
 }
+
+export interface CreatePostFormData {
+  privacy: string;
+  content: string;
+}
+
+export interface CreatePostError {
+  content?: string[];
+  privacy?: string[];
+}
