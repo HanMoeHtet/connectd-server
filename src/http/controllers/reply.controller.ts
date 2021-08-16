@@ -1,42 +1,47 @@
 import {
   CREATED,
-  MAX_COMMENTS_PER_POST_PER_REQUEST,
+  MAX_REPLIES_PER_COMMENT_PER_REQUEST,
   SERVER_ERROR,
   SUCCESS,
 } from '@src/constants';
 import CommentModel from '@src/resources/comment/comment.model';
 import { PostType } from '@src/resources/post/post.model';
 import ReactionModel from '@src/resources/reaction/reaction.model';
+import ReplyModel from '@src/resources/reply/reply.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import { prepareComment } from '@src/utils/comment';
-import { findPost, prepareUpdatedFieldsInPost } from '@src/utils/post';
-import { validateCreateComment } from '@src/utils/validation';
+import { findComment, prepareUpdatedFieldsInComment } from '@src/utils/comment';
+import { prepareReply } from '@src/utils/reply';
+import {
+  validateCreateComment,
+  validateCreateReply,
+} from '@src/utils/validation';
 import { NextFunction, Response } from 'express';
 
-interface GetCommentsInPostRequest
+interface GetRepliesInCommentRequest
   extends Request<{
     params: {
-      postId?: string;
+      commentId?: string;
     };
     query: {
-      lastCommentId?: string;
+      lastReplyId?: string;
       limit?: string;
     };
   }> {}
-export const getCommentsInPost = async (
-  req: GetCommentsInPostRequest,
+export const getRepliesInComment = async (
+  req: GetRepliesInCommentRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const { lastCommentId, limit } = req.query;
-  const { postId } = req.params;
+  const { lastReplyId, limit } = req.query;
+  const { commentId } = req.params;
 
-  let post;
+  let comment;
 
   try {
-    post = await findPost(postId);
+    comment = await findComment(commentId);
   } catch (err) {
     next(err);
     return;
@@ -50,14 +55,14 @@ export const getCommentsInPost = async (
     });
 
   const _limit = Math.min(
-    Number(limit) || MAX_COMMENTS_PER_POST_PER_REQUEST,
-    MAX_COMMENTS_PER_POST_PER_REQUEST
+    Number(limit) || MAX_REPLIES_PER_COMMENT_PER_REQUEST,
+    MAX_REPLIES_PER_COMMENT_PER_REQUEST
   );
 
-  const extraQuery = lastCommentId ? { _id: { $lt: lastCommentId } } : {};
+  const extraQuery = lastReplyId ? { _id: { $lt: lastReplyId } } : {};
 
   const populateOptions = {
-    path: 'comments',
+    path: 'replies',
     match: {
       ...extraQuery,
     },
@@ -74,7 +79,7 @@ export const getCommentsInPost = async (
     },
     select: {
       userId: 1,
-      postId: 1,
+      commentId: 1,
       content: 1,
       reactionCounts: 1,
       reactionIds: 1,
@@ -84,22 +89,18 @@ export const getCommentsInPost = async (
     },
   };
 
-  if (post.type === PostType.POST) {
-    post = await post.populate(populateOptions).execPopulate();
-  } else {
-    post = await post.populate(populateOptions).execPopulate();
-  }
+  comment = await comment.populate(populateOptions).execPopulate();
 
-  if (!post.comments) {
+  if (!comment.replies) {
     return res.status(SERVER_ERROR).json({
       message: i18next.t('httpError.500'),
     });
   }
 
-  const responseComments = await Promise.all(
-    post.comments.map(async (comment) => {
+  const responseReplies = await Promise.all(
+    comment.replies.map(async (reply) => {
       const reactions = await ReactionModel.find({
-        _id: { $in: comment.reactionIds },
+        _id: { $in: reply.reactionIds },
       }).select({
         type: 1,
       });
@@ -107,7 +108,7 @@ export const getCommentsInPost = async (
         (reaction) => reaction.userId === res.locals.user.id
       );
 
-      const { reactionIds, ...rest } = comment.toJSON();
+      const { reactionIds, ...rest } = reply.toJSON();
 
       return {
         ...rest,
@@ -118,40 +119,40 @@ export const getCommentsInPost = async (
 
   return res.status(SUCCESS).json({
     data: {
-      comments: responseComments,
-      post: prepareUpdatedFieldsInPost(post),
+      replies: responseReplies,
+      comment: prepareUpdatedFieldsInComment(comment),
     },
   });
 };
 
-interface CreateCommentRequest
+interface CreateReplyRequest
   extends Request<{
     reqBody: {
       content: string;
     };
     params: {
-      postId: string;
+      commentId: string;
     };
   }> {}
-export const createComment = async (
-  req: CreateCommentRequest,
+export const createReply = async (
+  req: CreateReplyRequest,
   res: AuthResponse,
   next: NextFunction
 ) => {
   try {
-    await validateCreateComment(req.body);
+    await validateCreateReply(req.body);
   } catch (e) {
     next(e);
     return;
   }
 
   const { content } = req.body;
-  const { postId } = req.params;
+  const { commentId } = req.params;
 
-  let post;
+  let comment;
 
   try {
-    post = await findPost(postId);
+    comment = await findComment(commentId);
   } catch (e) {
     next(e);
     return;
@@ -159,13 +160,13 @@ export const createComment = async (
 
   const user = res.locals.user;
 
-  let comment = new CommentModel({
+  let reply = new ReplyModel({
     userId: user._id,
-    postId: post._id,
+    commentId: comment._id,
     content,
   });
 
-  comment = await comment
+  reply = await reply
     .populate({
       path: 'user',
       select: {
@@ -175,19 +176,19 @@ export const createComment = async (
     })
     .execPopulate();
 
+  await reply.save();
+
+  comment.replyCount++;
+  comment.replyIds.push(reply._id);
   await comment.save();
 
-  post.commentCount++;
-  post.commentIds.push(comment._id);
-  await post.save();
-
-  user.commentIds.push(comment._id);
+  user.replyIds.push(reply._id);
   await user.save();
 
   res.status(CREATED).json({
     data: {
-      comment: prepareComment(comment),
-      post: prepareUpdatedFieldsInPost(post),
+      reply: prepareReply(reply),
+      comment: prepareUpdatedFieldsInComment(comment),
     },
   });
 };

@@ -17,12 +17,13 @@ import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import { compareMongooseIds } from '@src/utils/helpers';
 import { NextFunction, Response } from 'express';
-import { findPost, prepareUpdatedFieldsInPost } from '@src/utils/post';
+import { findComment, prepareUpdatedFieldsInComment } from '@src/utils/comment';
+import { findReply, prepareUpdatedFieldsInReply } from '@src/utils/reply';
 
-interface GetReactionsInPostRequest
+interface GetReactionsInReplyRequest
   extends Request<{
     params: {
-      postId?: string;
+      replyId?: string;
     };
     query: {
       // TODO: add first post id
@@ -31,18 +32,18 @@ interface GetReactionsInPostRequest
       reactionType?: string;
     };
   }> {}
-export const getReactionsInPost = async (
-  req: GetReactionsInPostRequest,
+export const getReactionsInReply = async (
+  req: GetReactionsInReplyRequest,
   res: Response,
   next: NextFunction
 ) => {
   let { limit, reactionType, lastReactionId: lastReactionId } = req.query;
-  const { postId } = req.params;
+  const { replyId } = req.params;
 
-  let post;
+  let reply;
 
   try {
-    post = await findPost(postId);
+    reply = await findReply(replyId);
   } catch (err) {
     next(err);
     return;
@@ -63,9 +64,9 @@ export const getReactionsInPost = async (
 
   let reactionIds;
   if (!_reactionType || !(_reactionType in ReactionType)) {
-    reactionIds = post.reactionIds;
+    reactionIds = reply.reactionIds;
   } else {
-    reactionIds = post.reactions.get(_reactionType as ReactionType);
+    reactionIds = reply.reactions.get(_reactionType as ReactionType);
   }
 
   const extraQuery = lastReactionId ? { $lt: lastReactionId } : {};
@@ -90,26 +91,26 @@ export const getReactionsInPost = async (
   return res.status(SUCCESS).json({
     data: {
       reactions,
-      post: prepareUpdatedFieldsInPost(post),
+      reply: prepareUpdatedFieldsInReply(reply),
     },
   });
 };
 
-interface AddReactionToPostRequest
+interface AddReactionToReplyRequest
   extends Request<{
     params: {
-      postId?: string;
+      replyId?: string;
     };
     reqBody: {
       type?: string;
     };
   }> {}
-export const addReactionToPost = async (
-  req: AddReactionToPostRequest,
+export const addReactionToReply = async (
+  req: AddReactionToReplyRequest,
   res: AuthResponse,
   next: NextFunction
 ) => {
-  const { postId } = req.params;
+  const { replyId } = req.params;
   let { type } = req.body;
 
   type = type?.toUpperCase();
@@ -125,10 +126,10 @@ export const addReactionToPost = async (
   }
 
   const _type: ReactionType = <ReactionType>type;
-  let post;
+  let reply;
 
   try {
-    post = await findPost(postId);
+    reply = await findReply(replyId);
   } catch (err) {
     next(err);
     return;
@@ -142,33 +143,29 @@ export const addReactionToPost = async (
     },
   };
 
-  if (post.type === PostType.POST) {
-    post = await post.populate(basePopulateOptions).execPopulate();
-  } else {
-    post = await post.populate(basePopulateOptions).execPopulate();
-  }
+  reply = await reply.populate(basePopulateOptions).execPopulate();
 
-  if (!post.populatedReactions) {
+  if (!reply.populatedReactions) {
     next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
     return;
   }
 
-  const userReactedReaction = post.populatedReactions.find((reaction) =>
+  const userReactedReaction = reply.populatedReactions.find((reaction) =>
     compareMongooseIds(reaction.userId, res.locals.user._id)
   );
 
   if (userReactedReaction) {
     const _type = userReactedReaction.type;
 
-    post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 1) - 1);
+    reply.reactionCounts.set(_type, (reply.reactionCounts.get(_type) || 1) - 1);
 
-    post.reactionIds = post.reactionIds.filter(
+    reply.reactionIds = reply.reactionIds.filter(
       (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
     );
 
-    post.reactions.set(
+    reply.reactions.set(
       _type,
-      (post.reactions.get(_type) || []).filter(
+      (reply.reactions.get(_type) || []).filter(
         (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
       )
     );
@@ -176,30 +173,29 @@ export const addReactionToPost = async (
     res.locals.user.reactionIds = res.locals.user.reactionIds.filter(
       (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
     );
-    await res.locals.user.save();
 
     await userReactedReaction.delete();
   }
 
   let reaction = new ReactionModel({
     userId: res.locals.user._id,
-    sourceType: ReactionSourceType.POST,
-    sourceId: post._id,
+    sourceType: ReactionSourceType.REPLY,
+    sourceId: reply._id,
     type,
   });
 
   await reaction.save();
 
-  post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 0) + 1);
+  reply.reactionCounts.set(_type, (reply.reactionCounts.get(_type) || 0) + 1);
 
-  post.reactionIds.push(reaction._id);
+  reply.reactionIds.push(reaction._id);
 
-  post.reactions.set(_type, [
-    ...(post.reactions.get(_type) || []),
+  reply.reactions.set(_type, [
+    ...(reply.reactions.get(_type) || []),
     reaction._id,
   ]);
 
-  await post.save();
+  await reply.save();
 
   res.locals.user.reactionIds.push(reaction._id);
   await res.locals.user.save();
@@ -207,28 +203,28 @@ export const addReactionToPost = async (
   return res.status(CREATED).json({
     message: i18next.t('reaction.added'),
     data: {
-      post: prepareUpdatedFieldsInPost(post),
+      reply: prepareUpdatedFieldsInReply(reply),
     },
   });
 };
 
-interface RemoveReactionFromPostRequest
+interface RemoveReactionFromReplyRequest
   extends Request<{
     params: {
-      postId?: string;
+      replyId?: string;
     };
   }> {}
-export const removeReactionFromPost = async (
-  req: RemoveReactionFromPostRequest,
+export const removeReactionFromReply = async (
+  req: RemoveReactionFromReplyRequest,
   res: AuthResponse,
   next: NextFunction
 ) => {
-  const { postId } = req.params;
+  const { replyId } = req.params;
 
-  let post;
+  let reply;
 
   try {
-    post = await findPost(postId);
+    reply = await findReply(replyId);
   } catch (err) {
     next(err);
     return;
@@ -242,18 +238,14 @@ export const removeReactionFromPost = async (
     },
   };
 
-  if (post.type === PostType.POST) {
-    post = await post.populate(basePopulateOptions).execPopulate();
-  } else {
-    post = await post.populate(basePopulateOptions).execPopulate();
-  }
+  reply = await reply.populate(basePopulateOptions).execPopulate();
 
-  if (!post.populatedReactions) {
+  if (!reply.populatedReactions) {
     next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
     return;
   }
 
-  const userReactedReaction = post.populatedReactions.find((reaction) => {
+  const userReactedReaction = reply.populatedReactions.find((reaction) => {
     return compareMongooseIds(reaction.userId, res.locals.user._id);
   });
 
@@ -263,20 +255,20 @@ export const removeReactionFromPost = async (
   } else {
     const _type = userReactedReaction.type;
 
-    post.reactionCounts.set(_type, (post.reactionCounts.get(_type) || 1) - 1);
+    reply.reactionCounts.set(_type, (reply.reactionCounts.get(_type) || 1) - 1);
 
-    post.reactionIds = post.reactionIds.filter(
+    reply.reactionIds = reply.reactionIds.filter(
       (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
     );
 
-    post.reactions.set(
+    reply.reactions.set(
       _type,
-      (post.reactions.get(_type) || []).filter(
+      (reply.reactions.get(_type) || []).filter(
         (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
       )
     );
 
-    await post.save();
+    await reply.save();
 
     res.locals.user.reactionIds = res.locals.user.reactionIds.filter(
       (reactionId) => !compareMongooseIds(reactionId, userReactedReaction._id)
@@ -289,7 +281,7 @@ export const removeReactionFromPost = async (
   return res.status(SUCCESS).json({
     message: i18next.t('reaction.removed'),
     data: {
-      post: prepareUpdatedFieldsInPost(post),
+      reply: prepareUpdatedFieldsInReply(reply),
     },
   });
 };

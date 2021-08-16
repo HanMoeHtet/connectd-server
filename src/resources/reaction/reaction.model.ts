@@ -12,6 +12,7 @@ export enum ReactionType {
 export enum ReactionSourceType {
   POST = 'Post',
   COMMENT = 'Comment',
+  REPLY = 'Reply',
 }
 
 export interface Reaction {

@@ -9,6 +9,7 @@ import {
 import { RequestError } from '@src/http/error-handlers/handler';
 import { PostType } from '@src/resources/post/post.model';
 import ReactionModel, {
+  ReactionSourceType,
   ReactionType,
 } from '@src/resources/reaction/reaction.model';
 import i18next from '@src/services/i18next';
@@ -154,7 +155,6 @@ export const addReactionToComment = async (
 
   if (userReactedReaction) {
     const _type = userReactedReaction.type;
-    console.log('asdfasd', userReactedReaction);
 
     comment.reactionCounts.set(
       _type,
@@ -181,7 +181,7 @@ export const addReactionToComment = async (
 
   let reaction = new ReactionModel({
     userId: res.locals.user._id,
-    sourceType: 'Post',
+    sourceType: ReactionSourceType.COMMENT,
     sourceId: comment._id,
     type,
   });
@@ -286,7 +286,7 @@ export const removeReactionFromComment = async (
     await userReactedReaction.delete();
   }
 
-  return res.status(CREATED).json({
+  return res.status(SUCCESS).json({
     message: i18next.t('reaction.removed'),
     data: {
       comment: prepareUpdatedFieldsInComment(comment),

@@ -18,6 +18,8 @@ import {
   CreateCommentFormData,
   CreatePostError,
   CreatePostFormData,
+  CreateReplyError,
+  CreateReplyFormData,
   EmailRegistrationFormData,
   PhoneNumberRegistrationFormData,
   Pronouns,
@@ -288,6 +290,25 @@ export const validateCreateComment = async (
 
   for (let key in errors) {
     const error = errors[key as keyof CreateCommentError];
+    if (error && error.length) {
+      throw new ValidationError(BAD_REQUEST, errors);
+    }
+  }
+
+  return errors;
+};
+
+export const validateCreateReply = async (
+  data: Partial<CreateReplyFormData>
+): Promise<CreateReplyError> => {
+  const errors: CreateReplyError = {};
+
+  const { content } = data;
+
+  errors.content = await validateContent(content);
+
+  for (let key in errors) {
+    const error = errors[key as keyof CreateReplyError];
     if (error && error.length) {
       throw new ValidationError(BAD_REQUEST, errors);
     }

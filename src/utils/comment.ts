@@ -21,7 +21,7 @@ export const findComment = async (commentId?: string) => {
   if (!comment) {
     throw new RequestError(
       BAD_REQUEST,
-      i18next.t('notFound', { field: 'post' })
+      i18next.t('notFound', { field: 'comment' })
     );
   }
 

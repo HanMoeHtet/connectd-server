@@ -53,3 +53,11 @@ export interface CreateCommentFormData {
 export interface CreateCommentError {
   content?: string[];
 }
+
+export interface CreateReplyFormData {
+  content: string;
+}
+
+export interface CreateReplyError {
+  content?: string[];
+}

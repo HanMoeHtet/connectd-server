@@ -65,7 +65,8 @@ export const handleError = (
   next: NextFunction
 ) => {
   if (!(err instanceof BaseError)) {
-    return next(err);
+    next(err);
+    return;
   }
 
   const { status, json } = err.handle();
