@@ -28,6 +28,32 @@ export const findComment = async (commentId?: string) => {
   return comment;
 };
 
+export const prepareComment = (comment: CommentDocument) => {
+  const {
+    _id,
+    userId,
+    postId,
+    content,
+    reactionCounts,
+    reactionIds,
+    replyCount,
+    user,
+    createdAt,
+  } = comment;
+
+  return {
+    _id,
+    userId,
+    postId,
+    content,
+    reactionCounts,
+    reactionIds,
+    replyCount,
+    user,
+    createdAt,
+  };
+};
+
 export const prepareUpdatedFieldsInComment = (comment: CommentDocument) => {
   return {
     _id: comment._id,

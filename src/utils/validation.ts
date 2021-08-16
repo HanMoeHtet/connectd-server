@@ -14,6 +14,8 @@ import User from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { validatePhoneNumber as validateNationalNumber } from '@src/services/sms';
 import {
+  CreateCommentError,
+  CreateCommentFormData,
   CreatePostError,
   CreatePostFormData,
   EmailRegistrationFormData,
@@ -238,7 +240,10 @@ export const validateContent = async (content?: string): Promise<string[]> => {
     return [i18next.t('validationError.required', { field })];
   }
 
-  if (content.length < MIN_CONTENT_LENGTH) {
+  if (
+    content.length < MIN_CONTENT_LENGTH ||
+    content.length > MAX_CONTENT_LENGTH
+  ) {
     return [
       i18next.t('validationError.length', {
         min: MIN_CONTENT_LENGTH,
@@ -264,6 +269,25 @@ export const validateCreatePost = async (
 
   for (let key in errors) {
     const error = errors[key as keyof CreatePostError];
+    if (error && error.length) {
+      throw new ValidationError(BAD_REQUEST, errors);
+    }
+  }
+
+  return errors;
+};
+
+export const validateCreateComment = async (
+  data: Partial<CreateCommentFormData>
+): Promise<CreateCommentError> => {
+  const errors: CreateCommentError = {};
+
+  const { content } = data;
+
+  errors.content = await validateContent(content);
+
+  for (let key in errors) {
+    const error = errors[key as keyof CreateCommentError];
     if (error && error.length) {
       throw new ValidationError(BAD_REQUEST, errors);
     }

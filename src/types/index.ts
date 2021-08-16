@@ -45,3 +45,11 @@ export interface CreatePostError {
   content?: string[];
   privacy?: string[];
 }
+
+export interface CreateCommentFormData {
+  content: string;
+}
+
+export interface CreateCommentError {
+  content?: string[];
+}

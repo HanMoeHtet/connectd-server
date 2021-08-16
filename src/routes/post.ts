@@ -19,5 +19,6 @@ router.delete(
 );
 
 router.get('/:postId/comments', CommentController.getCommentsInPost);
+router.post('/:postId/comments', CommentController.createComment);
 
 export default router;

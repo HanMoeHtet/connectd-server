@@ -1,13 +1,18 @@
 import {
+  CREATED,
   MAX_COMMENTS_PER_POST_PER_REQUEST,
   SERVER_ERROR,
   SUCCESS,
 } from '@src/constants';
+import CommentModel from '@src/resources/comment/comment.model';
 import { PostType } from '@src/resources/post/post.model';
 import ReactionModel from '@src/resources/reaction/reaction.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
+import { AuthResponse } from '@src/types/responses';
+import { prepareComment } from '@src/utils/comment';
 import { findPost, prepareUpdatedFieldsInPost } from '@src/utils/post';
+import { validateCreateComment } from '@src/utils/validation';
 import { NextFunction, Response } from 'express';
 
 interface GetCommentsInPostRequest
@@ -116,5 +121,73 @@ export const getCommentsInPost = async (
       comments: responseComments,
     },
     post: prepareUpdatedFieldsInPost(post),
+  });
+};
+
+interface CreateCommentRequest
+  extends Request<{
+    reqBody: {
+      content: string;
+    };
+    params: {
+      postId: string;
+    };
+  }> {}
+export const createComment = async (
+  req: CreateCommentRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  try {
+    await validateCreateComment(req.body);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  const { content } = req.body;
+  const { postId } = req.params;
+
+  let post;
+
+  try {
+    post = await findPost(postId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  const user = res.locals.user;
+
+  let comment = new CommentModel({
+    userId: user._id,
+    postId: post._id,
+    content,
+  });
+
+  comment = await comment
+    .populate({
+      path: 'user',
+      select: {
+        username: 1,
+        avatar: 1,
+      },
+    })
+    .execPopulate();
+
+  await comment.save();
+
+  post.commentCount++;
+  post.commentIds.push(comment._id);
+  await post.save();
+
+  user.commentIds.push(comment._id);
+  await user.save();
+
+  res.status(CREATED).json({
+    data: {
+      comment: prepareComment(comment),
+      post: prepareUpdatedFieldsInPost(post),
+    },
   });
 };
