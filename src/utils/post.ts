@@ -47,7 +47,6 @@ export const preparePost = (post: PostDocument) => {
     _id,
     userId,
     type,
-    sourceId: post.type === PostType.SHARE ? post.sourceId : undefined,
     privacy,
     content,
     reactionCounts,
@@ -56,6 +55,13 @@ export const preparePost = (post: PostDocument) => {
     shareCount,
     createdAt,
     user,
+  };
+};
+
+export const prepareShare = (post: PostDocument) => {
+  return {
+    ...preparePost(post),
+    source: post.type === PostType.SHARE ? post.source : undefined,
   };
 };
 

@@ -13,11 +13,29 @@ export const getPosts = async (req: Request, res: AuthResponse) => {
       data: [],
     });
 
-  const posts = await Post.find({ type: PostType.POST })
+  const posts = await Post.find({})
     .sort({ createdAt: 'desc' })
     .skip(skip)
     .limit(limit)
     .populate('user', { username: 1, avatar: 1 })
+    .populate({
+      path: 'source',
+      populate: {
+        path: 'user',
+        select: {
+          username: 1,
+          avatar: 1,
+        },
+      },
+      select: {
+        userId: 1,
+        type: 1,
+        privacy: 1,
+        content: 1,
+        createdAt: 1,
+        user: 1,
+      },
+    })
     .select({
       userId: 1,
       type: 1,

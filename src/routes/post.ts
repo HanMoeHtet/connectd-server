@@ -1,6 +1,7 @@
 import * as PostController from '@src/http/controllers/post.controller';
 import * as CommentController from '@src/http/controllers/comment.controller';
 import * as ReactionInPostController from '@src/http/controllers/reaction-in-post.controller';
+import * as ShareController from '@src/http/controllers/share.controller';
 import checkAuth from '@src/http/middlewares/check-auth.middleware.';
 import { Router } from 'express';
 
@@ -20,5 +21,7 @@ router.delete(
 
 router.get('/:postId/comments', CommentController.getCommentsInPost);
 router.post('/:postId/comments', CommentController.createComment);
+
+router.post('/:postId/shares', ShareController.create);
 
 export default router;

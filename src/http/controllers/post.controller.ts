@@ -70,11 +70,6 @@ export const create = async (
   const { _id: userId } = res.locals.user;
   const { privacy, content } = req.body;
 
-  const populateOptions = {
-    path: 'user',
-    select: { username: 1, avatar: 1 },
-  };
-
   let post = new Post({
     userId,
     privacy,
@@ -82,10 +77,16 @@ export const create = async (
     type: PostType.POST,
   });
 
+  const populateOptions = {
+    path: 'user',
+    select: { username: 1, avatar: 1 },
+  };
+
   if (post.type === PostType.POST) {
     post = await post.populate(populateOptions).execPopulate();
-  } else if (post.type === PostType.SHARE) {
-    post = await post.populate(populateOptions).execPopulate();
+  } else {
+    next(new RequestError(BAD_REQUEST, i18next.t('httpError.500')));
+    return;
   }
 
   await post.save();

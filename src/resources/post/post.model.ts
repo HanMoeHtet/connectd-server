@@ -43,6 +43,7 @@ export interface NormalPost extends BasePost {
 export interface SharedPost extends BasePost {
   type: PostType.SHARE;
   sourceId: string;
+  source?: PopulatedDoc<PostDocument>;
 }
 
 export type Post = NormalPost | SharedPost;
@@ -70,7 +71,7 @@ export const PostSchema = new Schema<Post>(
     },
     content: {
       type: String,
-      required: true,
+      default: '',
     },
     reactionCounts: {
       type: Map,
@@ -144,6 +145,13 @@ PostSchema.virtual('shares', {
   ref: 'Post',
   localField: 'shareIds',
   foreignField: '_id',
+});
+
+PostSchema.virtual('source', {
+  ref: 'Post',
+  localField: 'sourceId',
+  foreignField: '_id',
+  justOne: true,
 });
 
 PostSchema.set('toObject', { virtuals: true });

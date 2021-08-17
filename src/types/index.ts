@@ -61,3 +61,13 @@ export interface CreateReplyFormData {
 export interface CreateReplyError {
   content?: string[];
 }
+
+export interface CreateShareFormData {
+  privacy: string;
+  content: string;
+}
+
+export interface CreateShareError {
+  content?: string[];
+  privacy?: string[];
+}

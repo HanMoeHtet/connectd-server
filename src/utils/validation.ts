@@ -20,6 +20,8 @@ import {
   CreatePostFormData,
   CreateReplyError,
   CreateReplyFormData,
+  CreateShareError,
+  CreateShareFormData,
   EmailRegistrationFormData,
   PhoneNumberRegistrationFormData,
   Pronouns,
@@ -235,15 +237,24 @@ export const validatePrivacy = async (privacy?: string): Promise<string[]> => {
   return [];
 };
 
-export const validateContent = async (content?: string): Promise<string[]> => {
+interface ValidateContentOptions {
+  minLength?: number;
+}
+export const validateContent = async (
+  content?: string,
+  options: ValidateContentOptions = {}
+): Promise<string[]> => {
   const field = 'content';
 
-  if (!content) {
+  const { minLength } = options;
+
+  if (content === undefined) {
     return [i18next.t('validationError.required', { field })];
   }
 
   if (
-    content.length < MIN_CONTENT_LENGTH ||
+    content.length <
+      (minLength !== undefined ? minLength : MIN_CONTENT_LENGTH) ||
     content.length > MAX_CONTENT_LENGTH
   ) {
     return [
@@ -309,6 +320,27 @@ export const validateCreateReply = async (
 
   for (let key in errors) {
     const error = errors[key as keyof CreateReplyError];
+    if (error && error.length) {
+      throw new ValidationError(BAD_REQUEST, errors);
+    }
+  }
+
+  return errors;
+};
+
+export const validateCreateShare = async (
+  data: Partial<CreateShareFormData>
+): Promise<CreateShareError> => {
+  const errors: CreateShareError = {};
+
+  const { privacy, content } = data;
+
+  errors.privacy = await validatePrivacy(privacy);
+
+  errors.content = await validateContent(content, { minLength: 0 });
+
+  for (let key in errors) {
+    const error = errors[key as keyof CreateShareError];
     if (error && error.length) {
       throw new ValidationError(BAD_REQUEST, errors);
     }
