@@ -5,3 +5,4 @@ build
 
 src/resources/seed.config.js
 src/resources/one-time-run.ts
+storage

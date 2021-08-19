@@ -1,5 +1,5 @@
 import * as ReactionInReplyController from '@src/http/controllers/reaction-in-reply.controller';
-import checkAuth from '@src/http/middlewares/check-auth.middleware.';
+import checkAuth from '@src/http/middlewares/check-auth.middleware';
 import { Router } from 'express';
 
 const router = Router();

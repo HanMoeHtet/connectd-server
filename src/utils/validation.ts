@@ -270,15 +270,20 @@ export const validateContent = async (
 };
 
 export const validateCreatePost = async (
-  data: Partial<CreatePostFormData>
+  data: Partial<CreatePostFormData>,
+  options: { minContentLength?: number } = {}
 ): Promise<CreatePostError> => {
+  const { minContentLength } = options;
+
   const errors: CreatePostError = {};
 
   const { privacy, content } = data;
 
   errors.privacy = await validatePrivacy(privacy);
 
-  errors.content = await validateContent(content);
+  errors.content = await validateContent(content, {
+    minLength: minContentLength,
+  });
 
   for (let key in errors) {
     const error = errors[key as keyof CreatePostError];

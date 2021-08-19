@@ -1,5 +1,5 @@
 import * as UserController from '@src/http/controllers/user.contorller';
-import checkAuth from '@src/http/middlewares/check-auth.middleware.';
+import checkAuth from '@src/http/middlewares/check-auth.middleware';
 import { Router } from 'express';
 
 const router = Router();

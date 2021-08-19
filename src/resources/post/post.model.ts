@@ -15,12 +15,21 @@ export enum PostType {
   SHARE = 'SHARE',
 }
 
+export enum MediaType {
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+}
+
 export interface BasePost {
   userId: string;
   user?: PopulatedDoc<UserDocument>;
   createdAt: Date;
   privacy: Privacy;
   content: string;
+  media: {
+    type: MediaType;
+    url: string;
+  };
   reactionCounts: Map<ReactionType, number>;
   reactionIds: string[];
   populatedReactions?: PopulatedDoc<ReactionDocument>[];
@@ -72,6 +81,15 @@ export const PostSchema = new Schema<Post>(
     content: {
       type: String,
       default: '',
+    },
+    media: {
+      type: {
+        type: String,
+        enum: Object.values(MediaType),
+      },
+      url: {
+        type: String,
+      },
     },
     reactionCounts: {
       type: Map,

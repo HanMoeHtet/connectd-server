@@ -42,6 +42,7 @@ export const getPosts = async (req: Request, res: AuthResponse) => {
       sourceId: 1,
       privacy: 1,
       content: 1,
+      media: 1,
       reactionCounts: 1,
       reactionIds: 1,
       commentCount: 1,
