@@ -296,13 +296,17 @@ export const validateCreatePost = async (
 };
 
 export const validateCreateComment = async (
-  data: Partial<CreateCommentFormData>
+  data: Partial<CreateCommentFormData>,
+  options: { minContentLength?: number } = {}
 ): Promise<CreateCommentError> => {
   const errors: CreateCommentError = {};
+  const { minContentLength } = options;
 
   const { content } = data;
 
-  errors.content = await validateContent(content);
+  errors.content = await validateContent(content, {
+    minLength: minContentLength,
+  });
 
   for (let key in errors) {
     const error = errors[key as keyof CreateCommentError];
@@ -315,13 +319,17 @@ export const validateCreateComment = async (
 };
 
 export const validateCreateReply = async (
-  data: Partial<CreateReplyFormData>
+  data: Partial<CreateReplyFormData>,
+  options: { minContentLength?: number } = {}
 ): Promise<CreateReplyError> => {
   const errors: CreateReplyError = {};
+  const { minContentLength } = options;
 
   const { content } = data;
 
-  errors.content = await validateContent(content);
+  errors.content = await validateContent(content, {
+    minLength: minContentLength,
+  });
 
   for (let key in errors) {
     const error = errors[key as keyof CreateReplyError];

@@ -21,8 +21,16 @@ router.delete(
 );
 
 router.get('/:postId/comments', CommentController.getCommentsInPost);
-router.post('/:postId/comments', CommentController.createComment);
+router.post(
+  '/:postId/comments',
+  fileUpload.single('media'),
+  CommentController.createComment
+);
 
-router.post('/:postId/shares', ShareController.create);
+router.post(
+  '/:postId/shares',
+  fileUpload.single('media'),
+  ShareController.create
+);
 
 export default router;

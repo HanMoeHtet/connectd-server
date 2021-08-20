@@ -5,20 +5,23 @@ import {
   SUCCESS,
 } from '@src/constants';
 import CommentModel from '@src/resources/comment/comment.model';
-import { PostType } from '@src/resources/post/post.model';
+import { MediaType, PostType } from '@src/resources/post/post.model';
 import ReactionModel from '@src/resources/reaction/reaction.model';
 import ReplyModel from '@src/resources/reply/reply.model';
 import i18next from '@src/services/i18next';
+import { upload } from '@src/services/storage';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import { prepareComment } from '@src/utils/comment';
 import { findComment, prepareUpdatedFieldsInComment } from '@src/utils/comment';
+import { isImage } from '@src/utils/media-type';
 import { prepareReply } from '@src/utils/reply';
 import {
   validateCreateComment,
   validateCreateReply,
 } from '@src/utils/validation';
 import { NextFunction, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
 interface GetRepliesInCommentRequest
   extends Request<{
@@ -81,6 +84,7 @@ export const getRepliesInComment = async (
       userId: 1,
       commentId: 1,
       content: 1,
+      media: 1,
       reactionCounts: 1,
       reactionIds: 1,
       replyCount: 1,
@@ -140,7 +144,7 @@ export const createReply = async (
   next: NextFunction
 ) => {
   try {
-    await validateCreateReply(req.body);
+    await validateCreateReply(req.body, { minContentLength: req.file ? 0 : 1 });
   } catch (e) {
     next(e);
     return;
@@ -158,12 +162,22 @@ export const createReply = async (
     return;
   }
 
+  let media;
+
+  if (req.file) {
+    media = {
+      url: await upload(`media/${uuidv4()}`, req.file.buffer),
+      type: isImage(req.file.mimetype) ? MediaType.IMAGE : MediaType.VIDEO,
+    };
+  }
+
   const user = res.locals.user;
 
   let reply = new ReplyModel({
     userId: user._id,
     commentId: comment._id,
     content,
+    media,
   });
 
   reply = await reply

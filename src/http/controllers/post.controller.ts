@@ -101,7 +101,7 @@ export const create = async (
     next(new RequestError(BAD_REQUEST, i18next.t('httpError.500')));
     return;
   }
-  console.log(media);
+  
   await post.save();
 
   res.status(CREATED).json({

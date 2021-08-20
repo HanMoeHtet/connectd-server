@@ -3,6 +3,7 @@ import { Document, PopulatedDoc } from 'mongoose';
 import { ReactionType, ReactionDocument } from '../reaction/reaction.model';
 import { ReplyDocument } from '../reply/reply.model';
 import { UserDocument } from '../user/user.model';
+import { MediaType } from '../post/post.model';
 
 export interface Comment {
   userId: string;
@@ -10,6 +11,10 @@ export interface Comment {
   postId: string;
   createdAt: Date;
   content: string;
+  media: {
+    type: MediaType;
+    url: string;
+  };
   reactionCounts: Map<ReactionType, number>;
   reactionIds: string[];
   populatedReactions?: PopulatedDoc<ReactionDocument>[];
@@ -34,6 +39,13 @@ export const CommentSchema = new Schema<Comment>(
     content: {
       type: String,
       requred: true,
+    },
+    media: {
+      type: {
+        type: String,
+        enum: MediaType,
+      },
+      url: String,
     },
     reactionCounts: {
       type: Map,

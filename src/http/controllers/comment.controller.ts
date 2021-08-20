@@ -5,15 +5,18 @@ import {
   SUCCESS,
 } from '@src/constants';
 import CommentModel from '@src/resources/comment/comment.model';
-import { PostType } from '@src/resources/post/post.model';
+import { MediaType, PostType } from '@src/resources/post/post.model';
 import ReactionModel from '@src/resources/reaction/reaction.model';
 import i18next from '@src/services/i18next';
+import { upload } from '@src/services/storage';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import { prepareComment } from '@src/utils/comment';
+import { isImage } from '@src/utils/media-type';
 import { findPost, prepareUpdatedFieldsInPost } from '@src/utils/post';
 import { validateCreateComment } from '@src/utils/validation';
 import { NextFunction, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
 interface GetCommentsInPostRequest
   extends Request<{
@@ -76,6 +79,7 @@ export const getCommentsInPost = async (
       userId: 1,
       postId: 1,
       content: 1,
+      media: 1,
       reactionCounts: 1,
       reactionIds: 1,
       replyCount: 1,
@@ -139,7 +143,9 @@ export const createComment = async (
   next: NextFunction
 ) => {
   try {
-    await validateCreateComment(req.body);
+    await validateCreateComment(req.body, {
+      minContentLength: req.file ? 0 : 1,
+    });
   } catch (e) {
     next(e);
     return;
@@ -157,12 +163,22 @@ export const createComment = async (
     return;
   }
 
+  let media;
+
+  if (req.file) {
+    media = {
+      url: await upload(`media/${uuidv4()}`, req.file.buffer),
+      type: isImage(req.file.mimetype) ? MediaType.IMAGE : MediaType.VIDEO,
+    };
+  }
+
   const user = res.locals.user;
 
   let comment = new CommentModel({
     userId: user._id,
     postId: post._id,
     content,
+    media,
   });
 
   comment = await comment

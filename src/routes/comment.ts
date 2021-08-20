@@ -3,6 +3,7 @@ import * as ReactionInCommentController from '@src/http/controllers/reaction-in-
 import * as ReplyController from '@src/http/controllers/reply.controller';
 import checkAuth from '@src/http/middlewares/check-auth.middleware';
 import { Router } from 'express';
+import fileUpload from '@src/services/file-upload';
 
 const router = Router();
 
@@ -22,6 +23,10 @@ router.delete(
 );
 
 router.get('/:commentId/replies', ReplyController.getRepliesInComment);
-router.post('/:commentId/replies', ReplyController.createReply);
+router.post(
+  '/:commentId/replies',
+  fileUpload.single('media'),
+  ReplyController.createReply
+);
 
 export default router;
