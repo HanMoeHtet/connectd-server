@@ -1,16 +1,17 @@
-import { BAD_REQUEST, NOT_FOUND } from '@src/constants';
+import { BAD_REQUEST, NOT_FOUND, SUCCESS } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import Post from '@src/resources/post/post.model';
 import User, { UserModel } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
+import { AuthResponse } from '@src/types/responses';
 import {
   prepareBasicProfileResponse,
   prepareProfileResponse,
 } from '@src/utils/profile';
 import { NextFunction, Response } from 'express';
 
-export const findUser = async (userId?: string) => {
+export const findUser = async (userId?: string, selectOptions?: {}) => {
   if (!userId) {
     throw new RequestError(
       BAD_REQUEST,
@@ -20,7 +21,7 @@ export const findUser = async (userId?: string) => {
 
   let user;
   try {
-    user = await UserModel.findById(userId);
+    user = await UserModel.findById(userId).select(selectOptions);
   } catch (e) {
     throw new RequestError(BAD_REQUEST, i18next.t('httpError.500'), e);
   }
@@ -56,7 +57,7 @@ export const getProfile = async (
     return;
   }
 
-  return res.json({
+  return res.status(SUCCESS).json({
     data: {
       user: prepareProfileResponse(user),
     },
@@ -84,7 +85,7 @@ export const getBasicProfile = async (
     return;
   }
 
-  return res.json({
+  return res.status(SUCCESS).json({
     data: {
       user: prepareBasicProfileResponse(user),
     },
@@ -129,9 +130,62 @@ export const getPostsByUser = async (
     });
   }
 
-  return res.json({
+  return res.status(SUCCESS).json({
     data: {
       posts: user.posts,
-    }
+    },
+  });
+};
+
+interface ShowRequest
+  extends Request<{
+    params: {
+      userId?: string;
+    };
+  }> {}
+export const show = async (
+  req: ShowRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { userId } = req.params;
+
+  let user;
+  try {
+    user = await findUser(userId, {
+      username: 1,
+      email: 1,
+      phoneNumber: 1,
+      birthday: 1,
+      pronouns: 1,
+      avatar: 1,
+      postIds: 1,
+      friendIds: 1,
+    });
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  const friendCount = user.friendIds.length;
+  const postCount = user.postIds.length;
+
+  const isAuthUser = userId === res.locals.user._id;
+  const areUsersFriends = isAuthUser
+    ? undefined
+    : user.friendIds.includes(res.locals.user._id);
+
+  const { postIds, friendIds, ...rest } = user.toJSON();
+
+  res.status(SUCCESS).json({
+    data: {
+      user: {
+        ...rest,
+        friendCount,
+        postCount,
+      },
+      isAuthUser,
+      areUsersFriends,
+    },
   });
 };

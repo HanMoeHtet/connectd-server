@@ -5,12 +5,13 @@ import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import { NextFunction, Response } from 'express';
-import { findPost, preparePost } from '@src/utils/post';
+import { findPost, preparePost, prepareShare } from '@src/utils/post';
 import { validateCreatePost } from '@src/utils/validation';
 import { CreatePostFormData } from '@src/types';
 import { upload } from '@src/services/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { isImage } from '@src/utils/media-type';
+import ReactionModel from '@src/resources/reaction/reaction.model';
 
 interface ShowRequest
   extends Request<{
@@ -43,12 +44,51 @@ export const show = async (
   if (post.type === PostType.POST) {
     post = await post.populate(populateOptions).execPopulate();
   } else if (post.type === PostType.SHARE) {
-    post = await post.populate(populateOptions).execPopulate();
+    post = await post
+      .populate(populateOptions)
+      .populate({
+        path: 'source',
+        populate: {
+          path: 'user',
+          select: {
+            username: 1,
+            avatar: 1,
+          },
+        },
+        select: {
+          userId: 1,
+          type: 1,
+          privacy: 1,
+          content: 1,
+          createdAt: 1,
+          user: 1,
+        },
+      })
+      .execPopulate();
+  }
+
+  const reactions = await ReactionModel.find({
+    _id: { $in: post.reactionIds },
+  }).select({
+    type: 1,
+  });
+
+  const userReactedRection = reactions.find(
+    (reaction) => reaction.userId === res.locals.user._id
+  );
+
+  if (post.type === PostType.POST) {
+    post = preparePost(post);
+  } else if (post.type === PostType.SHARE) {
+    post = prepareShare(post);
   }
 
   return res.status(SUCCESS).json({
     data: {
-      post: preparePost(post),
+      post: {
+        ...post,
+        userReactedRectionType: userReactedRection?.type,
+      },
     },
   });
 };
@@ -101,7 +141,7 @@ export const create = async (
     next(new RequestError(BAD_REQUEST, i18next.t('httpError.500')));
     return;
   }
-  
+
   await post.save();
 
   res.status(CREATED).json({

@@ -5,6 +5,7 @@ import { Document, Model, PopulatedDoc } from 'mongoose';
 import { ReactionDocument } from '@src/resources/reaction/reaction.model';
 import { CommentDocument } from '@src/resources/comment/comment.model';
 import { ReplyDocument } from '@src/resources/reply/reply.model';
+import { Friend } from './friend.model';
 
 export interface User extends UnverifiedUser {
   avatar?: string;
@@ -18,6 +19,8 @@ export interface User extends UnverifiedUser {
   comments?: PopulatedDoc<CommentDocument>[];
   replyIds: string[];
   replies?: PopulatedDoc<ReplyDocument>[];
+  friendIds: string[];
+  friends: PopulatedDoc<Friend>[];
 }
 
 const UserSchema = new Schema<User>(
@@ -76,6 +79,12 @@ const UserSchema = new Schema<User>(
         ref: 'Reply',
       },
     ],
+    friendIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Friend',
+      },
+    ],
   },
   { id: false }
 );
@@ -101,6 +110,12 @@ UserSchema.virtual('comments', {
 UserSchema.virtual('replies', {
   ref: 'Reply',
   localField: 'replyIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('friends', {
+  ref: 'Friend',
+  localField: 'friendIds',
   foreignField: '_id',
 });
 
