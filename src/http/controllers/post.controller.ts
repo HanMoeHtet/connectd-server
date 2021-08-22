@@ -144,6 +144,9 @@ export const create = async (
 
   await post.save();
 
+  res.locals.user.postIds.push(post._id);
+  await res.locals.user.save();
+
   res.status(CREATED).json({
     data: {
       post: preparePost(post),

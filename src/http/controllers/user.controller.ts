@@ -1,10 +1,17 @@
-import { BAD_REQUEST, NOT_FOUND, SUCCESS } from '@src/constants';
+import {
+  BAD_REQUEST,
+  MAX_POSTS_PER_PAGE,
+  NOT_FOUND,
+  SUCCESS,
+} from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import Post from '@src/resources/post/post.model';
+import ReactionModel from '@src/resources/reaction/reaction.model';
 import User, { UserModel } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
+import { compareMongooseIds } from '@src/utils/helpers';
 import {
   prepareBasicProfileResponse,
   prepareProfileResponse,
@@ -99,40 +106,116 @@ interface GetPostsByUserRequest
     };
     query: {
       limit?: string;
-      skip?: string;
+      lastPostId?: string;
     };
   }> {}
 export const getPostsByUser = async (
   req: GetPostsByUserRequest,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   const { userId } = req.params;
 
-  if (!userId) {
-    return res.status(BAD_REQUEST).json({
-      message: i18next.t('missing', { field: 'userId' }),
-    });
-  }
-
   let user;
+
   try {
-    user = await User.findById(userId).populate('posts').exec();
-  } catch (err) {
-    console.log(err);
-    return res.status(BAD_REQUEST).json({
-      message: i18next.t('httpEror.500'),
-    });
+    user = await findUser(userId);
+  } catch (e) {
+    next(e);
+    return;
   }
 
-  if (!user) {
-    return res.status(NOT_FOUND).json({
-      message: i18next.t('notFound', { field: 'user' }),
-    });
-  }
+  const { limit, lastPostId } = req.query;
+
+  const _limit = Math.min(
+    Number(limit) || MAX_POSTS_PER_PAGE,
+    MAX_POSTS_PER_PAGE
+  );
+
+  const extraQuery = lastPostId ? { _id: { $lt: lastPostId } } : {};
+
+  const populateOptions = {
+    path: 'posts',
+    match: {
+      ...extraQuery,
+    },
+    options: {
+      sort: { createdAt: -1 },
+      limit: _limit,
+    },
+    populate: [
+      {
+        path: 'source',
+        populate: {
+          path: 'user',
+          select: {
+            username: 1,
+            avatar: 1,
+          },
+        },
+        select: {
+          userId: 1,
+          type: 1,
+          privacy: 1,
+          content: 1,
+          createdAt: 1,
+          user: 1,
+        },
+      },
+      {
+        path: 'user',
+        select: { username: 1, avatar: 1 },
+      },
+    ],
+    select: {
+      userId: 1,
+      type: 1,
+      sourceId: 1,
+      privacy: 1,
+      content: 1,
+      media: 1,
+      reactionCounts: 1,
+      reactionIds: 1,
+      commentCount: 1,
+      shareCount: 1,
+      createdAt: 1,
+      user: 1,
+    },
+  };
+
+  user = await user.populate(populateOptions).execPopulate();
+
+  const posts = user.posts || [];
+
+  const lastPost = posts[posts.length - 1];
+  const hasMore = user.postIds.some(
+    (postId) => lastPost && postId < lastPost._id
+  );
+
+  const responsePosts = await Promise.all(
+    posts.map(async (post) => {
+      const reactions = await ReactionModel.find({
+        _id: { $in: post.reactionIds },
+      }).select({
+        type: 1,
+      });
+      const userReactedRection = reactions.find(
+        (reaction) => reaction.userId === res.locals.user._id
+      );
+
+      const { reactionIds, ...rest } = post.toJSON();
+
+      return {
+        ...rest,
+        userReactedReactionType: userReactedRection?.type,
+      };
+    })
+  );
 
   return res.status(SUCCESS).json({
     data: {
-      posts: user.posts,
+      posts: responsePosts,
+      hasMore,
     },
   });
 };
@@ -170,7 +253,7 @@ export const show = async (
   const friendCount = user.friendIds.length;
   const postCount = user.postIds.length;
 
-  const isAuthUser = userId === res.locals.user._id;
+  const isAuthUser = compareMongooseIds(userId, res.locals.user._id);
   const areUsersFriends = isAuthUser
     ? undefined
     : user.friendIds.includes(res.locals.user._id);
@@ -188,4 +271,71 @@ export const show = async (
       areUsersFriends,
     },
   });
+};
+
+interface GetFriendsByUserRequest
+  extends Request<{
+    params: {
+      userId?: string;
+    };
+    query: {
+      limit?: string;
+      lastFriendId?: string;
+    };
+  }> {}
+export const getFriendsByUser = async (
+  req: GetFriendsByUserRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { userId } = req.params;
+
+  let user;
+
+  try {
+    user = await findUser(userId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  const { limit, lastFriendId } = req.query;
+
+  const _limit = Math.min(
+    Number(limit) || MAX_POSTS_PER_PAGE,
+    MAX_POSTS_PER_PAGE
+  );
+
+  const extraQuery = lastFriendId ? { _id: { $lt: lastFriendId } } : {};
+
+  const populateOptions = {
+    path: 'friends',
+    match: {
+      ...extraQuery,
+    },
+    options: {
+      sort: { createdAt: -1 },
+      limit: _limit,
+    },
+    populate: {
+      path: 'user',
+      select: {
+        username: 1,
+        avatar: 1,
+        friendIds: 1,
+      },
+    },
+  };
+
+  user = await user.populate(populateOptions).execPopulate();
+
+  const friends = user.friends || [];
+
+  const lastFriend = friends[friends.length - 1];
+  const hasMore = user.friendIds.some(
+    (friendId) => lastFriend && friendId < lastFriend._id);
+
+  const responseFriends = await Promise.all(
+    friends.map(async (friend) => {
+      const areUsersFriends = friend.user
 };

@@ -45,6 +45,7 @@ export const getCommentsInPost = async (
     return;
   }
 
+  // FIXME: return error if limit is not defined
   if (!limit)
     return res.status(SUCCESS).json({
       data: {
