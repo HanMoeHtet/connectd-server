@@ -1,4 +1,4 @@
-import { model, Schema } from '@src/config/database';
+import { model, Schema } from '@src/config/database.config';
 import { Pronouns } from '@src/types';
 import { Document, Model } from 'mongoose';
 

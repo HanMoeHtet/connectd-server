@@ -1,4 +1,4 @@
-import { model, Schema } from '@src/config/database';
+import { model, Schema } from '@src/config/database.config';
 import { Document, PopulatedDoc } from 'mongoose';
 import { UserDocument } from '../user/user.model';
 

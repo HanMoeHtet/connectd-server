@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { init as initDb } from '@src/config/database';
+import { init as initDb } from '@src/config/database.config';
 import '@src/services/i18next';
 import '@src/services/mail';
-import app, { init as initServer } from '@src/config/app';
+import app, { init as initServer } from '@src/config/app.config';
+import '@src/config/ws.config';
 
 import ApiRoutes from '@src/routes';
 import localeInspector from './http/middlewares/locale-inspector.middleware';

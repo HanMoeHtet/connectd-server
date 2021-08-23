@@ -1,11 +1,12 @@
-import { model, Schema } from '@src/config/database';
+import { model, Schema } from '@src/config/database.config';
 import { UnverifiedUser } from '@src/resources/unverified-user/unverified-user.model';
 import { PostDocument } from '@src/resources/post/post.model';
 import { Document, Model, PopulatedDoc } from 'mongoose';
 import { ReactionDocument } from '@src/resources/reaction/reaction.model';
 import { CommentDocument } from '@src/resources/comment/comment.model';
 import { ReplyDocument } from '@src/resources/reply/reply.model';
-import { FriendDocument } from './friend.model';
+import { FriendDocument } from '@src/resources/friend/friend.model';
+import { FriendRequestDocument } from '@src/resources/friend/friend-request.model';
 
 export interface User extends UnverifiedUser {
   avatar?: string;
@@ -21,6 +22,8 @@ export interface User extends UnverifiedUser {
   replies?: ReplyDocument[];
   friendIds: string[];
   friends?: FriendDocument[];
+  friendRequestIds: string[];
+  friendRequests?: FriendRequestDocument[];
 }
 
 const UserSchema = new Schema<User>(
@@ -85,6 +88,12 @@ const UserSchema = new Schema<User>(
         ref: 'Friend',
       },
     ],
+    friendRequestIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'FriendRequest',
+      },
+    ],
   },
   { id: false }
 );
@@ -116,6 +125,12 @@ UserSchema.virtual('replies', {
 UserSchema.virtual('friends', {
   ref: 'Friend',
   localField: 'friendIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('friendRequests', {
+  ref: 'FriendRequest',
+  localField: 'friendRequestIds',
   foreignField: '_id',
 });
 

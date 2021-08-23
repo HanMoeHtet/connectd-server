@@ -50,7 +50,7 @@ const onListening = () => {
   console.log(`Server listening at http://localhost:${port}`);
 };
 
-const server = http.createServer(app);
+export const server = http.createServer(app);
 server.on('error', onError);
 server.on('listening', onListening);
 

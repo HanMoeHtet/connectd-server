@@ -1,5 +1,5 @@
-import { UserDocument } from './user.model';
-import { model, Schema } from '@src/config/database';
+import { UserDocument } from '../user/user.model';
+import { model, Schema } from '@src/config/database.config';
 import { Document } from 'mongoose';
 
 export interface Friend {

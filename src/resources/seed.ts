@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { init } from '@src/config/database';
+import db, { init } from '@src/config/database.config';
 import { clearComments, seedComments } from './comment/comment.factory';
 import { clearPosts, seedPosts } from './post/post.factory';
 import { clearShares, seedShares } from './post/share.factory';
@@ -12,7 +12,6 @@ import {
   clearReactionsInComments,
   seedReactionsInComments,
 } from './reaction/reaction-in-comment.factory';
-import db from '@src/config/database';
 import { ClientSession } from 'mongoose';
 import {
   USER_SIZE,
