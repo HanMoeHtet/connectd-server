@@ -1,11 +1,10 @@
-import { PopulatedDoc } from 'mongoose';
-import { User } from './user.model';
+import { UserDocument } from './user.model';
 import { model, Schema } from '@src/config/database';
 import { Document } from 'mongoose';
 
 export interface Friend {
   userId: string;
-  user: PopulatedDoc<User>;
+  user?: UserDocument;
   createdAt: Date;
 }
 
@@ -24,6 +23,7 @@ FriendSchema.virtual('user', {
   ref: 'User',
   localField: 'userId',
   foreignField: '_id',
+  justOne: true,
 });
 
 FriendSchema.set('toObject', { virtuals: true });

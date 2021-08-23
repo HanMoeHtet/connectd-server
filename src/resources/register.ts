@@ -8,7 +8,7 @@ export const register = async (dir: string = models_path) => {
   await Promise.all(
     dirents.map(async (dirent) => {
       const res = resolve(dir, dirent.name);
-      if (res.indexOf('.model.ts') !== -1) {
+      if (res.endsWith('.model.ts') || res.endsWith('.model.js')) {
         require(res);
       }
       if (dirent.isDirectory()) {

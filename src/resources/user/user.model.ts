@@ -12,15 +12,15 @@ export interface User extends UnverifiedUser {
   emailVerifiedAt?: Date;
   phoneNumberVerifiedAt?: Date;
   postIds: string[];
-  posts?: PopulatedDoc<PostDocument>[];
+  posts?: PostDocument[];
   reactionIds: string[];
-  reactions?: PopulatedDoc<ReactionDocument>[];
+  reactions?: ReactionDocument[];
   commentIds: string[];
-  comments?: PopulatedDoc<CommentDocument>[];
+  comments?: CommentDocument[];
   replyIds: string[];
-  replies?: PopulatedDoc<ReplyDocument>[];
+  replies?: ReplyDocument[];
   friendIds: string[];
-  friends?: PopulatedDoc<FriendDocument>[];
+  friends?: FriendDocument[];
 }
 
 const UserSchema = new Schema<User>(

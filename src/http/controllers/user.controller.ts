@@ -253,10 +253,12 @@ export const show = async (
   const friendCount = user.friendIds.length;
   const postCount = user.postIds.length;
 
-  const isAuthUser = compareMongooseIds(userId, res.locals.user._id);
+  const authUser = res.locals.user;
+
+  const isAuthUser = compareMongooseIds(userId, authUser._id);
   const areUsersFriends = isAuthUser
     ? undefined
-    : user.friendIds.includes(res.locals.user._id);
+    : user.friendIds.includes(authUser._id);
 
   const { postIds, friendIds, ...rest } = user.toJSON();
 
@@ -329,13 +331,44 @@ export const getFriendsByUser = async (
 
   user = await user.populate(populateOptions).execPopulate();
 
+  const authUser = res.locals.user;
+
   const friends = user.friends || [];
 
   const lastFriend = friends[friends.length - 1];
   const hasMore = user.friendIds.some(
-    (friendId) => lastFriend && friendId < lastFriend._id);
+    (friendId) => lastFriend && friendId < lastFriend._id
+  );
 
   const responseFriends = await Promise.all(
     friends.map(async (friend) => {
-      const areUsersFriends = friend.user
+      console.log(friend);
+      if (!friend.user) {
+        // TODO: return error response;
+        console.trace();
+        throw new Error('not implemented');
+      }
+
+      const areUsersFriends = friend.user.friendIds.includes(authUser._id);
+
+      const { friendIds, ...rest } = friend.user.toJSON();
+
+      const responseFriend = {
+        ...friend.toObject(),
+        user: rest,
+      };
+
+      return {
+        ...responseFriend,
+        areUsersFriends,
+      };
+    })
+  );
+
+  res.status(SUCCESS).json({
+    data: {
+      friends: responseFriends,
+      hasMore,
+    },
+  });
 };
