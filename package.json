@@ -7,6 +7,7 @@
     "db:clear": "ts-node -r tsconfig-paths/register ./src/resources/seed.ts clear",
     "db:refresh": "ts-node -r tsconfig-paths/register ./src/resources/seed.ts refresh",
     "db:oneTime": "ts-node -r tsconfig-paths/register ./src/resources/seed.ts oneTime",
+    "ws:emit": "ts-node -r tsconfig-paths/register ./src/ws/emitter.ts",
     "start": "tsc && node -r ./tsconfig-paths-bootstrap.js ./build/index.js",
     "dev": "ts-node-dev -r tsconfig-paths/register ./src/index.ts",
     "stage": "npm run start",

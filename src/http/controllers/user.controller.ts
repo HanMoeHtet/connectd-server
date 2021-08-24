@@ -1,13 +1,7 @@
-import {
-  BAD_REQUEST,
-  MAX_POSTS_PER_PAGE,
-  NOT_FOUND,
-  SUCCESS,
-} from '@src/constants';
+import { BAD_REQUEST, MAX_POSTS_PER_PAGE, SUCCESS } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
-import Post from '@src/resources/post/post.model';
 import ReactionModel from '@src/resources/reaction/reaction.model';
-import User, { UserModel } from '@src/resources/user/user.model';
+import { UserModel } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
@@ -271,104 +265,6 @@ export const show = async (
       },
       isAuthUser,
       areUsersFriends,
-    },
-  });
-};
-
-interface GetFriendsByUserRequest
-  extends Request<{
-    params: {
-      userId?: string;
-    };
-    query: {
-      limit?: string;
-      lastFriendId?: string;
-    };
-  }> {}
-export const getFriendsByUser = async (
-  req: GetFriendsByUserRequest,
-  res: AuthResponse,
-  next: NextFunction
-) => {
-  const { userId } = req.params;
-
-  let user;
-
-  try {
-    user = await findUser(userId);
-  } catch (e) {
-    next(e);
-    return;
-  }
-
-  const { limit, lastFriendId } = req.query;
-
-  const _limit = Math.min(
-    Number(limit) || MAX_POSTS_PER_PAGE,
-    MAX_POSTS_PER_PAGE
-  );
-
-  const extraQuery = lastFriendId ? { _id: { $lt: lastFriendId } } : {};
-
-  const populateOptions = {
-    path: 'friends',
-    match: {
-      ...extraQuery,
-    },
-    options: {
-      sort: { createdAt: -1 },
-      limit: _limit,
-    },
-    populate: {
-      path: 'user',
-      select: {
-        username: 1,
-        avatar: 1,
-        friendIds: 1,
-      },
-    },
-  };
-
-  user = await user.populate(populateOptions).execPopulate();
-
-  const authUser = res.locals.user;
-
-  const friends = user.friends || [];
-
-  const lastFriend = friends[friends.length - 1];
-  const hasMore = user.friendIds.some(
-    (friendId) => lastFriend && friendId < lastFriend._id
-  );
-
-  const responseFriends = await Promise.all(
-    friends.map(async (friend) => {
-      console.log(friend);
-      if (!friend.user) {
-        // TODO: return error response;
-        console.trace();
-        throw new Error('not implemented');
-      }
-
-      const areUsersFriends = friend.user.friendIds.includes(authUser._id);
-
-      const { friendIds, ...rest } = friend.user.toJSON();
-
-      const responseFriend = {
-        ...friend.toObject(),
-        user: rest,
-      };
-
-      return {
-        ...responseFriend,
-        areUsersFriends,
-      };
-    })
-  );
-
-  res.status(SUCCESS).json({
-    data: {
-      friends: responseFriends,
-      hasMore,
     },
   });
 };

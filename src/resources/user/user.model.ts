@@ -7,6 +7,7 @@ import { CommentDocument } from '@src/resources/comment/comment.model';
 import { ReplyDocument } from '@src/resources/reply/reply.model';
 import { FriendDocument } from '@src/resources/friend/friend.model';
 import { FriendRequestDocument } from '@src/resources/friend/friend-request.model';
+import { NotificationDocument } from '../notification/notification.model';
 
 export interface User extends UnverifiedUser {
   avatar?: string;
@@ -24,6 +25,8 @@ export interface User extends UnverifiedUser {
   friends?: FriendDocument[];
   friendRequestIds: string[];
   friendRequests?: FriendRequestDocument[];
+  notificationIds: string[];
+  notifications?: NotificationDocument[];
 }
 
 const UserSchema = new Schema<User>(
@@ -94,6 +97,12 @@ const UserSchema = new Schema<User>(
         ref: 'FriendRequest',
       },
     ],
+    notificationIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Notification',
+      },
+    ],
   },
   { id: false }
 );
@@ -131,6 +140,12 @@ UserSchema.virtual('friends', {
 UserSchema.virtual('friendRequests', {
   ref: 'FriendRequest',
   localField: 'friendRequestIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('notifications', {
+  ref: 'Notification',
+  localField: 'notificationIds',
   foreignField: '_id',
 });
 
