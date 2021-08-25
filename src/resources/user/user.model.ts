@@ -23,8 +23,10 @@ export interface User extends UnverifiedUser {
   replies?: ReplyDocument[];
   friendIds: string[];
   friends?: FriendDocument[];
-  friendRequestIds: string[];
-  friendRequests?: FriendRequestDocument[];
+  sentFriendRequestIds: string[];
+  sentFriendRequests?: FriendRequestDocument[];
+  receivedFriendRequestIds: string[];
+  receivedFriendRequests?: FriendRequestDocument[];
   notificationIds: string[];
   notifications?: NotificationDocument[];
 }
@@ -91,7 +93,13 @@ const UserSchema = new Schema<User>(
         ref: 'Friend',
       },
     ],
-    friendRequestIds: [
+    sentFriendRequestIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'FriendRequest',
+      },
+    ],
+    receivedFriendRequestIds: [
       {
         type: Schema.Types.ObjectId,
         ref: 'FriendRequest',
@@ -137,9 +145,15 @@ UserSchema.virtual('friends', {
   foreignField: '_id',
 });
 
-UserSchema.virtual('friendRequests', {
+UserSchema.virtual('sentFriendRequests', {
   ref: 'FriendRequest',
-  localField: 'friendRequestIds',
+  localField: 'sentFriendRequestIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('receivedFriendRequests', {
+  ref: 'FriendRequest',
+  localField: 'receivedFriendRequestIds',
   foreignField: '_id',
 });
 

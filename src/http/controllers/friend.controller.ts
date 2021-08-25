@@ -4,8 +4,19 @@ import { AuthResponse } from '@src/types/responses';
 import { NextFunction } from 'express';
 import { findUser } from './user.controller';
 import { emit as emitFriendRequestReceived } from '@src/ws/emitters/friend-request-received.emitter';
-import { MAX_POSTS_PER_PAGE, SUCCESS } from '@src/constants';
-import NotificationModel from '@src/resources/notification/notification.model';
+import { emit as emitFriendRequestAccepted } from '@src/ws/emitters/friend-request-accepted.emitter';
+import { MAX_POSTS_PER_PAGE, SERVER_ERROR, SUCCESS } from '@src/constants';
+import NotificationModel, {
+  NotificationType,
+} from '@src/resources/notification/notification.model';
+import {
+  canAcceptFriendRequest,
+  canCreateFriendRequest,
+  findFriendRequest,
+} from '@src/utils/friend';
+import FriendModel from '@src/resources/friend/friend.model';
+import { RequestError } from '../error-handlers/handler';
+import i18next from '@src/services/i18next';
 
 interface GetFriendsByUserRequest
   extends Request<{
@@ -118,8 +129,9 @@ export const createFriendRequest = async (
 ) => {
   const { userId } = req.params;
 
-  let user;
+  const authUser = res.locals.user;
 
+  let user;
   try {
     user = await findUser(userId);
   } catch (e) {
@@ -127,7 +139,12 @@ export const createFriendRequest = async (
     return;
   }
 
-  const authUser = res.locals.user;
+  try {
+    canCreateFriendRequest(authUser, user);
+  } catch (e) {
+    next(e);
+    return;
+  }
 
   const friendRequest = new FriendRequestModel({
     senderId: authUser._id,
@@ -136,10 +153,16 @@ export const createFriendRequest = async (
 
   await friendRequest.save();
 
-  user.friendRequestIds.push(friendRequest._id);
+  authUser.sentFriendRequestIds.push(friendRequest._id);
+  await authUser.save();
+
+  user.receivedFriendRequestIds.push(friendRequest._id);
   await user.save();
 
+  res.status(SUCCESS).end();
+
   const notification = new NotificationModel({
+    type: NotificationType.FRIEND_REQUEST_RECEIVED,
     friendRequestId: friendRequest._id,
     createdAt: friendRequest.createdAt,
   });
@@ -149,6 +172,7 @@ export const createFriendRequest = async (
   emitFriendRequestReceived({
     _id: notification._id,
     isRead: notification.isRead,
+    type: NotificationType.FRIEND_REQUEST_RECEIVED,
     friendRequest: {
       _id: friendRequest._id,
       receiverId: user._id,
@@ -161,6 +185,123 @@ export const createFriendRequest = async (
     },
     createdAt: notification.createdAt,
   });
+};
+
+interface AcceptFriendRequestRequest
+  extends Request<{
+    params: {
+      friendRequestId?: string;
+    };
+  }> {}
+export const acceptFriendRequest = async (
+  req: AcceptFriendRequestRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { friendRequestId } = req.params;
+
+  let friendRequest;
+
+  const authUser = res.locals.user;
+
+  try {
+    friendRequest = await findFriendRequest(friendRequestId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  try {
+    canAcceptFriendRequest(authUser, friendRequest);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  friendRequest = await friendRequest
+    .populate({
+      path: 'sender',
+      select: {
+        friendIds: 1,
+        sentFriendRequestIds: 1,
+        username: 1,
+        avatar: 1,
+      },
+    })
+    .populate({
+      path: 'receiver',
+      select: {
+        friendIds: 1,
+        receivedFriendRequestIds: 1,
+        username: 1,
+        avatar: 1,
+      },
+    })
+    .execPopulate();
+
+  if (!friendRequest.sender || !friendRequest.receiver) {
+    next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
+    return;
+  }
+
+  const createdAt = new Date();
+  let newFriendForSender = new FriendModel({
+    userId: friendRequest.receiverId,
+    createdAt,
+  });
+  await newFriendForSender.save();
+
+  let newFriendForReceiver = new FriendModel({
+    userId: friendRequest.senderId,
+    createdAt,
+  });
+  await newFriendForReceiver.save();
+
+  const sender = friendRequest.sender;
+  sender.sentFriendRequestIds.splice(
+    sender.sentFriendRequestIds.indexOf(friendRequest._id),
+    1
+  );
+  sender.friendIds.push(newFriendForSender._id);
+  await sender.save();
+
+  const receiver = friendRequest.receiver;
+  receiver.receivedFriendRequestIds.splice(
+    receiver.receivedFriendRequestIds.indexOf(friendRequest._id),
+    1
+  );
+  receiver.friendIds.push(newFriendForReceiver._id);
+  await receiver.save();
+
+  await friendRequest.delete();
 
   res.status(SUCCESS).end();
+
+  const notification = new NotificationModel({
+    type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+    createdAt,
+  });
+
+  await notification.save();
+
+  emitFriendRequestAccepted({
+    _id: notification._id,
+    isRead: notification.isRead,
+    type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+    friendRequest: {
+      _id: friendRequest._id,
+      sender: {
+        _id: sender._id,
+        username: sender.username,
+        avatar: sender.avatar,
+      },
+      receiver: {
+        _id: receiver._id,
+        username: receiver.username,
+        avatar: receiver.avatar,
+      },
+      createdAt: friendRequest.createdAt,
+    },
+    createdAt: notification.createdAt,
+  });
 };

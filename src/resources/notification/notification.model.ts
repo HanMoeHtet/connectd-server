@@ -3,10 +3,12 @@ import { Document } from 'mongoose';
 
 export enum NotificationType {
   FRIEND_REQUEST_RECEIVED = 'FRIEND_REQUEST_RECEIVED',
+  FRIEND_REQUEST_ACCEPTED = 'FRIEND_REQUEST_ACCEPTED',
 }
 
 export interface BaseNotification {
   isRead: boolean;
+  type: NotificationType;
   createdAt: Date;
 }
 
@@ -15,12 +17,23 @@ export interface FriendRequestReceivedNotification extends BaseNotification {
   friendRequestId: string;
 }
 
-export type Notification = FriendRequestReceivedNotification;
+export interface FriendRequestAcceptedNotification extends BaseNotification {
+  type: NotificationType.FRIEND_REQUEST_ACCEPTED;
+}
+
+export type Notification =
+  | FriendRequestReceivedNotification
+  | FriendRequestAcceptedNotification;
 
 const NotificationSchema = new Schema<Notification>({
   isRead: {
     type: Boolean,
     default: false,
+  },
+  type: {
+    type: String,
+    enum: Object.values(NotificationType),
+    required: true,
   },
   friendRequestId: {
     type: String,
@@ -41,6 +54,6 @@ export const NotificationModel = model<Notification>(
   NotificationSchema
 );
 
-export interface NotificationDocument extends Notification, Document {}
+export type NotificationDocument = Notification & Document;
 
 export default NotificationModel;
