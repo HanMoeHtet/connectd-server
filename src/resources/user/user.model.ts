@@ -1,12 +1,12 @@
 import { model, Schema } from '@src/config/database.config';
-import { UnverifiedUser } from '@src/resources/unverified-user/unverified-user.model';
-import { PostDocument } from '@src/resources/post/post.model';
-import { Document, Model, PopulatedDoc } from 'mongoose';
-import { ReactionDocument } from '@src/resources/reaction/reaction.model';
 import { CommentDocument } from '@src/resources/comment/comment.model';
-import { ReplyDocument } from '@src/resources/reply/reply.model';
-import { FriendDocument } from '@src/resources/friend/friend.model';
 import { FriendRequestDocument } from '@src/resources/friend/friend-request.model';
+import { FriendDocument } from '@src/resources/friend/friend.model';
+import { PostDocument } from '@src/resources/post/post.model';
+import { ReactionDocument } from '@src/resources/reaction/reaction.model';
+import { ReplyDocument } from '@src/resources/reply/reply.model';
+import { UnverifiedUser } from '@src/resources/unverified-user/unverified-user.model';
+import { Document, Model } from 'mongoose';
 import { NotificationDocument } from '../notification/notification.model';
 
 export interface User extends UnverifiedUser {

@@ -48,6 +48,7 @@
   },
   "friendRequest": {
     "cantSend": "Can't send friend request.",
-    "cantAccept": "Can't accept friend request."
+    "cantAccept": "Can't accept friend request.",
+    "cantReject": "Can't reject friend request."
   }
 }

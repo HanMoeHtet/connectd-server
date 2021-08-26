@@ -39,6 +39,8 @@ export const canCreateFriendRequest = (
   if (compareMongooseIds(receiver._id, sender._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantSend'));
   }
+
+  // TODO: check if receiver is a friend of sender
 };
 
 export const canAcceptFriendRequest = (
@@ -47,5 +49,14 @@ export const canAcceptFriendRequest = (
 ) => {
   if (!compareMongooseIds(friendRequest.receiverId, receiver._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantAccept'));
+  }
+};
+
+export const canRejectFriendRequest = (
+  receiver: UserDocument,
+  friendRequest: FriendRequestDocument
+) => {
+  if (!compareMongooseIds(friendRequest.receiverId, receiver._id)) {
+    throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantReject'));
   }
 };

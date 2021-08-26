@@ -7,5 +7,6 @@ const router = Router();
 router.use(checkAuth);
 
 router.post('/:friendRequestId/accept', FriendController.acceptFriendRequest);
+router.post('/:friendRequestId/reject', FriendController.rejectFriendRequest);
 
 export default router;

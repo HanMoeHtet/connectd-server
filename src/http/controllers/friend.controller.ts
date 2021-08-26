@@ -12,11 +12,13 @@ import NotificationModel, {
 import {
   canAcceptFriendRequest,
   canCreateFriendRequest,
+  canRejectFriendRequest,
   findFriendRequest,
 } from '@src/utils/friend';
 import FriendModel from '@src/resources/friend/friend.model';
 import { RequestError } from '../error-handlers/handler';
 import i18next from '@src/services/i18next';
+import { findFriendRequestReceivedNotificationByFriendRequestId } from '@src/utils/notification';
 
 interface GetFriendsByUserRequest
   extends Request<{
@@ -169,6 +171,9 @@ export const createFriendRequest = async (
 
   await notification.save();
 
+  authUser.notificationIds.push(notification._id);
+  await authUser.save();
+
   emitFriendRequestReceived({
     _id: notification._id,
     isRead: notification.isRead,
@@ -226,6 +231,7 @@ export const acceptFriendRequest = async (
         sentFriendRequestIds: 1,
         username: 1,
         avatar: 1,
+        notificationIds: 1,
       },
     })
     .populate({
@@ -284,6 +290,9 @@ export const acceptFriendRequest = async (
 
   await notification.save();
 
+  sender.notificationIds.push(notification._id);
+  await sender.save();
+
   emitFriendRequestAccepted({
     _id: notification._id,
     isRead: notification.isRead,
@@ -304,4 +313,94 @@ export const acceptFriendRequest = async (
     },
     createdAt: notification.createdAt,
   });
+};
+
+interface RejectFriendRequestRequest
+  extends Request<{
+    params: {
+      friendRequestId?: string;
+    };
+  }> {}
+export const rejectFriendRequest = async (
+  req: RejectFriendRequestRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { friendRequestId } = req.params;
+
+  let friendRequest;
+
+  const authUser = res.locals.user;
+
+  try {
+    friendRequest = await findFriendRequest(friendRequestId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  try {
+    canRejectFriendRequest(authUser, friendRequest);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  friendRequest = await friendRequest
+    .populate({
+      path: 'sender',
+      select: {
+        sentFriendRequestIds: 1,
+        notificationIds: 1,
+      },
+    })
+    .populate({
+      path: 'receiver',
+      select: {
+        receivedFriendRequestIds: 1,
+      },
+    })
+    .execPopulate();
+
+  if (!friendRequest.sender || !friendRequest.receiver) {
+    next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
+    return;
+  }
+
+  const sender = friendRequest.sender;
+  sender.sentFriendRequestIds.splice(
+    sender.sentFriendRequestIds.indexOf(friendRequest._id),
+    1
+  );
+  await sender.save();
+
+  const receiver = friendRequest.receiver;
+  receiver.receivedFriendRequestIds.splice(
+    receiver.receivedFriendRequestIds.indexOf(friendRequest._id),
+    1
+  );
+  await receiver.save();
+
+  await friendRequest.delete();
+
+  res.status(SUCCESS).end();
+
+  let notification;
+
+  try {
+    notification = await findFriendRequestReceivedNotificationByFriendRequestId(
+      friendRequest._id
+    );
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+
+  sender.notificationIds.splice(
+    sender.notificationIds.indexOf(notification._id),
+    1
+  );
+  await sender.save();
+
+  await notification.delete();
 };

@@ -8,6 +8,7 @@ export enum NotificationType {
 
 export interface BaseNotification {
   isRead: boolean;
+  hasBeenSeen: boolean;
   type: NotificationType;
   createdAt: Date;
 }
@@ -30,6 +31,10 @@ const NotificationSchema = new Schema<Notification>({
     type: Boolean,
     default: false,
   },
+  hasBeenSeen: {
+    type: Boolean,
+    default: true,
+  },
   type: {
     type: String,
     enum: Object.values(NotificationType),
@@ -37,6 +42,7 @@ const NotificationSchema = new Schema<Notification>({
   },
   friendRequestId: {
     type: String,
+    index: true,
   },
   createdAt: {
     type: Date,
