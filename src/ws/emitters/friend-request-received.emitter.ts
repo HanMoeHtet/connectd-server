@@ -3,9 +3,10 @@ import io from '@src/ws';
 
 export const NAME = 'friend-request-received';
 
-export interface EmitOptions {
+export interface EmitData {
   _id: string;
-  isRead: boolean;
+  hasBeenRead: boolean;
+  hasBeenSeen: boolean;
   type: NotificationType.FRIEND_REQUEST_RECEIVED;
   friendRequest: {
     _id: string;
@@ -14,16 +15,15 @@ export interface EmitOptions {
       username: string;
       avatar?: string;
     };
-    receiverId: string;
+    receiver: {
+      _id: string;
+      username: string;
+      avatar?: string;
+    };
     createdAt: Date;
   };
   createdAt: Date;
 }
-export const emit = ({ _id, friendRequest, createdAt, type }: EmitOptions) => {
-  io.to(String(friendRequest.receiverId)).emit(NAME, {
-    _id,
-    type,
-    friendRequest,
-    createdAt,
-  });
+export const emit = (data: EmitData) => {
+  io.to(String(data.friendRequest.receiver._id)).emit(NAME, data);
 };

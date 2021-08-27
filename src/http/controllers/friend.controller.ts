@@ -148,6 +148,7 @@ export const createFriendRequest = async (
     return;
   }
 
+  // TODO: Case when receiver has already sent a request
   const friendRequest = new FriendRequestModel({
     senderId: authUser._id,
     receiverId: userId,
@@ -171,16 +172,21 @@ export const createFriendRequest = async (
 
   await notification.save();
 
-  authUser.notificationIds.push(notification._id);
-  await authUser.save();
+  user.notificationIds.push(notification._id);
+  await user.save();
 
   emitFriendRequestReceived({
     _id: notification._id,
-    isRead: notification.isRead,
+    hasBeenRead: notification.hasBeenRead,
+    hasBeenSeen: notification.hasBeenSeen,
     type: NotificationType.FRIEND_REQUEST_RECEIVED,
     friendRequest: {
       _id: friendRequest._id,
-      receiverId: user._id,
+      receiver: {
+        _id: user._id,
+        username: user.username,
+        avatar: user.avatar,
+      },
       sender: {
         _id: authUser._id,
         username: authUser.username,
@@ -295,7 +301,8 @@ export const acceptFriendRequest = async (
 
   emitFriendRequestAccepted({
     _id: notification._id,
-    isRead: notification.isRead,
+    hasBeenRead: notification.hasBeenRead,
+    hasBeenSeen: notification.hasBeenSeen,
     type: NotificationType.FRIEND_REQUEST_ACCEPTED,
     friendRequest: {
       _id: friendRequest._id,
@@ -396,11 +403,11 @@ export const rejectFriendRequest = async (
     return;
   }
 
-  sender.notificationIds.splice(
-    sender.notificationIds.indexOf(notification._id),
+  receiver.notificationIds.splice(
+    receiver.notificationIds.indexOf(notification._id),
     1
   );
-  await sender.save();
+  await receiver.save();
 
   await notification.delete();
 };
