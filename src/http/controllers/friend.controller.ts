@@ -14,6 +14,9 @@ import {
   canCreateFriendRequest,
   canRejectFriendRequest,
   findFriendRequest,
+  isUserDocumentWithFriends,
+  populateUserDocumentWithFriends,
+  UserDocumentWithFriends,
 } from '@src/utils/friend';
 import FriendModel from '@src/resources/friend/friend.model';
 import { RequestError } from '../error-handlers/handler';
@@ -85,30 +88,35 @@ export const getFriendsByUser = async (
     (friendId) => lastFriend && friendId < lastFriend._id
   );
 
-  const responseFriends = await Promise.all(
-    friends.map(async (friend) => {
-      console.log(friend);
-      if (!friend.user) {
-        // TODO: return error response;
-        console.trace();
-        throw new Error('not implemented');
-      }
+  let responseFriends;
 
-      const areUsersFriends = friend.user.friendIds.includes(authUser._id);
+  try {
+    responseFriends = await Promise.all(
+      friends.map(async (friend) => {
+        console.log(friend);
+        if (!friend.user) {
+          throw new RequestError(SERVER_ERROR, i18next.t('httpError.500'));
+        }
 
-      const { friendIds, ...rest } = friend.user.toJSON();
+        const areUsersFriends = friend.user.friendIds.includes(authUser._id);
 
-      const responseFriend = {
-        ...friend.toObject(),
-        user: rest,
-      };
+        const { friendIds, ...rest } = friend.user.toJSON();
 
-      return {
-        ...responseFriend,
-        areUsersFriends,
-      };
-    })
-  );
+        const responseFriend = {
+          ...friend.toObject(),
+          user: rest,
+        };
+
+        return {
+          ...responseFriend,
+          areUsersFriends,
+        };
+      })
+    );
+  } catch (e) {
+    next(e);
+    return;
+  }
 
   res.status(SUCCESS).json({
     data: {
@@ -130,7 +138,6 @@ export const createFriendRequest = async (
   next: NextFunction
 ) => {
   const { userId } = req.params;
-
   const authUser = res.locals.user;
 
   let user;
@@ -142,13 +149,12 @@ export const createFriendRequest = async (
   }
 
   try {
-    canCreateFriendRequest(authUser, user);
+    await canCreateFriendRequest(authUser, user);
   } catch (e) {
     next(e);
     return;
   }
 
-  // TODO: Case when receiver has already sent a request
   const friendRequest = new FriendRequestModel({
     senderId: authUser._id,
     receiverId: userId,
@@ -213,7 +219,7 @@ export const acceptFriendRequest = async (
 
   let friendRequest;
 
-  const authUser = res.locals.user;
+  let authUser = res.locals.user;
 
   try {
     friendRequest = await findFriendRequest(friendRequestId);
@@ -223,7 +229,7 @@ export const acceptFriendRequest = async (
   }
 
   try {
-    canAcceptFriendRequest(authUser, friendRequest);
+    await canAcceptFriendRequest(authUser, friendRequest);
   } catch (e) {
     next(e);
     return;
@@ -347,7 +353,7 @@ export const rejectFriendRequest = async (
   }
 
   try {
-    canRejectFriendRequest(authUser, friendRequest);
+    await canRejectFriendRequest(authUser, friendRequest);
   } catch (e) {
     next(e);
     return;

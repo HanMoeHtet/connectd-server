@@ -49,6 +49,8 @@
   "friendRequest": {
     "cantSend": "Can't send friend request.",
     "cantAccept": "Can't accept friend request.",
-    "cantReject": "Can't reject friend request."
+    "cantReject": "Can't reject friend request.",
+    "alreadyFriends": "Users are already friends.",
+    "alreadyPending": "Friend request is already pending."
   }
 }
