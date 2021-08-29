@@ -1,6 +1,6 @@
 import { model, Schema } from '@src/config/database.config';
 import { Document } from 'mongoose';
-import { FriendRequestDocument } from '../friend/friend-request.model';
+import { FriendRequestDocument } from '../friend-request/friend-request.model';
 
 export enum NotificationType {
   FRIEND_REQUEST_RECEIVED = 'FRIEND_REQUEST_RECEIVED',

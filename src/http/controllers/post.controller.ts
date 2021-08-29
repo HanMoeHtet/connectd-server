@@ -12,6 +12,7 @@ import { upload } from '@src/services/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { isImage } from '@src/utils/media-type';
 import ReactionModel from '@src/resources/reaction/reaction.model';
+import { compareMongooseIds } from '@src/utils/helpers';
 
 interface ShowRequest
   extends Request<{
@@ -71,10 +72,11 @@ export const show = async (
     _id: { $in: post.reactionIds },
   }).select({
     type: 1,
+    userId: 1,
   });
 
-  const userReactedRection = reactions.find(
-    (reaction) => reaction.userId === res.locals.user._id
+  const userReactedReaction = reactions.find((reaction) =>
+    compareMongooseIds(reaction.userId, res.locals.user._id)
   );
 
   if (post.type === PostType.POST) {
@@ -83,11 +85,14 @@ export const show = async (
     post = prepareShare(post);
   }
 
+  console.log(reactions, res.locals.user._id);
+  console.log(userReactedReaction);
+
   return res.status(SUCCESS).json({
     data: {
       post: {
         ...post,
-        userReactedRectionType: userReactedRection?.type,
+        userReactedReactionType: userReactedReaction?.type,
       },
     },
   });

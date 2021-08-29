@@ -79,7 +79,9 @@ export const seedReactionsInComments = async ({
 }: SeedReactionsInCommentsOptions): Promise<string[]> => {
   let reactionIds = [];
 
-  const users = await User.find({}).limit(size);
+  const users = await User.find({}, null, {
+    session: session || undefined,
+  }).limit(size);
   size = Math.min(size, users.length);
 
   for (let i = 0; i < size; i++) {

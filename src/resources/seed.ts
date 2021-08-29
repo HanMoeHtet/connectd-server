@@ -1,33 +1,43 @@
-import 'dotenv/config';
 import db, { init } from '@src/config/database.config';
+import 'dotenv/config';
+import { ClientSession } from 'mongoose';
 import { clearComments, seedComments } from './comment/comment.factory';
+import { clearFriendRequests } from './friend-request/friend-request.factory';
+import { clearFriends } from './friend/friend.factory';
+import { clearNotifications } from './notification/notification.factory';
 import { clearPosts, seedPosts } from './post/post.factory';
 import { clearShares, seedShares } from './post/share.factory';
-import { clearUsers, seedUsers } from './user/user.factory';
-import {
-  clearReactionsInPosts,
-  seedReactionsInPosts,
-} from './reaction/reaction-in-post.factory';
 import {
   clearReactionsInComments,
   seedReactionsInComments,
 } from './reaction/reaction-in-comment.factory';
-import { ClientSession } from 'mongoose';
 import {
-  USER_SIZE,
+  clearReactionsInPosts,
+  seedReactionsInPosts,
+} from './reaction/reaction-in-post.factory';
+import { clearReactionsInReplies } from './reaction/reaction-in-reply';
+import { clearReplies } from './reply/reply.factory';
+import {
+  COMMENT_SIZE,
   POST_SIZE,
   REACTION_SIZE,
-  COMMENT_SIZE,
   SHARE_SIZE,
+  USER_SIZE,
 } from './seed.config.js';
+import { clearUsers, seedUsers } from './user/user.factory';
 
 const clear = async (session: ClientSession) => {
   await clearUsers(session);
   await clearPosts(session);
   await clearReactionsInPosts(session);
   await clearReactionsInComments(session);
+  await clearReactionsInReplies(session);
   await clearComments(session);
+  await clearReplies(session);
   await clearShares(session);
+  await clearNotifications(session);
+  await clearFriends(session);
+  await clearFriendRequests(session);
 };
 
 const seed = async (session: ClientSession, models: string[]) => {

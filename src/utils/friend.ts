@@ -2,7 +2,7 @@ import { BAD_REQUEST, SERVER_ERROR } from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import FriendRequestModel, {
   FriendRequestDocument,
-} from '@src/resources/friend/friend-request.model';
+} from '@src/resources/friend-request/friend-request.model';
 import { FriendDocument } from '@src/resources/friend/friend.model';
 import { UserDocument } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
@@ -56,6 +56,22 @@ export const isUserDocumentWithFriends = (
   return (user as UserDocumentWithFriends).friends.every(
     isFriendDocumentWithUser
   );
+};
+
+export interface UserDocumentWithSentFriendRequests extends UserDocument {
+  sentFriendRequests: FriendRequestDocument[];
+}
+
+export const populateUserDocumentWithSentFriendRequests = async (
+  user: UserDocument
+): Promise<UserDocumentWithSentFriendRequests> => {
+  user = await user
+    .populate({
+      path: 'sentFriendRequests',
+    })
+    .execPopulate();
+
+  return user as UserDocumentWithSentFriendRequests;
 };
 
 export interface FriendRequestDocumentWithReceiverAndSender
@@ -174,11 +190,11 @@ export const areUsersFriends = (
 };
 
 export const hasPendingFriendRequest = (
-  sender: UserDocumentWithFriends,
-  receiver: UserDocumentWithFriends
+  sender: UserDocumentWithSentFriendRequests,
+  receiver: UserDocument
 ) => {
-  return sender.sentFriendRequestIds.some((friendRequestId) =>
-    receiver.receivedFriendRequestIds.includes(friendRequestId)
+  return sender.sentFriendRequests.some((sentFriendRequest) =>
+    compareMongooseIds(sentFriendRequest.receiverId, receiver._id)
   );
 };
 
@@ -186,21 +202,33 @@ export const canCreateFriendRequest = async (
   sender: UserDocument,
   receiver: UserDocument
 ) => {
-  let _sender = (sender = await populateUserDocumentWithFriends(sender));
-  let _receiver = (receiver = await populateUserDocumentWithFriends(receiver));
+  sender = await populateUserDocumentWithFriends(sender);
+  receiver = await populateUserDocumentWithFriends(receiver);
 
-  if (compareMongooseIds(_receiver._id, _sender._id)) {
+  if (compareMongooseIds(sender._id, receiver._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantSend'));
   }
 
-  if (areUsersFriends(_sender, _receiver)) {
+  if (
+    areUsersFriends(
+      sender as UserDocumentWithFriends,
+      receiver as UserDocumentWithFriends
+    )
+  ) {
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyFriends')
     );
   }
 
-  if (hasPendingFriendRequest(_sender, _receiver)) {
+  sender = await populateUserDocumentWithSentFriendRequests(sender);
+
+  if (
+    hasPendingFriendRequest(
+      sender as UserDocumentWithSentFriendRequests,
+      receiver
+    )
+  ) {
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyPending')
@@ -216,15 +244,21 @@ export const canAcceptFriendRequest = async (
     | FriendRequestDocument
     | FriendRequestDocumentWithReceiverAndSender
 ) => {
-  let _receiver = (receiver = await populateUserDocumentWithFriends(receiver));
-  let _friendRequest = (friendRequest =
-    await populateFriendRequestDocumentWithReceiverAndSender(friendRequest));
+  receiver = await populateUserDocumentWithFriends(receiver);
+  friendRequest = await populateFriendRequestDocumentWithReceiverAndSender(
+    friendRequest
+  );
 
-  if (!compareMongooseIds(friendRequest.receiverId, _receiver._id)) {
+  if (!compareMongooseIds(friendRequest.receiverId, receiver._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantAccept'));
   }
 
-  if (areUsersFriends(_receiver, _friendRequest.sender)) {
+  if (
+    areUsersFriends(
+      receiver as UserDocumentWithFriends,
+      (friendRequest as FriendRequestDocumentWithReceiverAndSender).sender
+    )
+  ) {
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyFriends')
@@ -240,15 +274,21 @@ export const canRejectFriendRequest = async (
     | FriendRequestDocument
     | FriendRequestDocumentWithReceiverAndSender
 ) => {
-  let _receiver = (receiver = await populateUserDocumentWithFriends(receiver));
-  let _friendRequest = (friendRequest =
-    await populateFriendRequestDocumentWithReceiverAndSender(friendRequest));
+  receiver = await populateUserDocumentWithFriends(receiver);
+  friendRequest = await populateFriendRequestDocumentWithReceiverAndSender(
+    friendRequest
+  );
 
   if (!compareMongooseIds(friendRequest.receiverId, receiver._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantReject'));
   }
 
-  if (areUsersFriends(_receiver, _friendRequest.sender)) {
+  if (
+    areUsersFriends(
+      receiver as UserDocumentWithFriends,
+      (friendRequest as FriendRequestDocumentWithReceiverAndSender).sender
+    )
+  ) {
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyFriends')

@@ -78,9 +78,12 @@ export const seedReactionsInPosts = async ({
 }: SeedReactionsInPostsOptions): Promise<string[]> => {
   let reactionIds = [];
 
-  const users = await User.find({}).limit(size);
+  const users = await User.find({}, null, {
+    session: session || undefined,
+  }).limit(size);
+  size = Math.min(size, users.length);
 
-  for (let i = 0; i < Math.min(size, users.length); i++) {
+  for (let i = 0; i < size; i++) {
     if (!user) user = users[i];
     reactionIds.push(
       await seedReactionInPost({

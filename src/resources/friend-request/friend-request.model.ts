@@ -46,7 +46,8 @@ FriendRequestSchema.set('toJSON', {
 
 export const FriendRequestModel = model<FriendRequest>(
   'FriendRequest',
-  FriendRequestSchema
+  FriendRequestSchema,
+  'friend_requests'
 );
 
 export interface FriendRequestDocument extends FriendRequest, Document {}

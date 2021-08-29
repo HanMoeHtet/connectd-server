@@ -1,4 +1,4 @@
-import FriendRequestModel from '@src/resources/friend/friend-request.model';
+import FriendRequestModel from '@src/resources/friend-request/friend-request.model';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import { NextFunction } from 'express';
@@ -364,13 +364,13 @@ export const rejectFriendRequest = async (
       path: 'sender',
       select: {
         sentFriendRequestIds: 1,
-        notificationIds: 1,
       },
     })
     .populate({
       path: 'receiver',
       select: {
         receivedFriendRequestIds: 1,
+        notificationIds: 1,
       },
     })
     .execPopulate();

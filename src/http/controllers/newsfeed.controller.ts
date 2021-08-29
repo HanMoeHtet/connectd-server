@@ -3,6 +3,7 @@ import Post, { PostType } from '@src/resources/post/post.model';
 import ReactionModel from '@src/resources/reaction/reaction.model';
 import { Request, Response } from 'express';
 import { AuthResponse } from '@src/types/responses';
+import { compareMongooseIds } from '@src/utils/helpers';
 
 export const getPosts = async (req: Request, res: AuthResponse) => {
   const skip = Number(req.query.skip);
@@ -58,16 +59,18 @@ export const getPosts = async (req: Request, res: AuthResponse) => {
         _id: { $in: post.reactionIds },
       }).select({
         type: 1,
+        userId: 1,
       });
-      const userReactedRection = reactions.find(
-        (reaction) => reaction.userId === res.locals.user._id
+
+      const userReactedReaction = reactions.find((reaction) =>
+        compareMongooseIds(reaction.userId, res.locals.user._id)
       );
 
       const { reactionIds, ...rest } = post.toJSON();
 
       return {
         ...rest,
-        userReactedReactionType: userReactedRection?.type,
+        userReactedReactionType: userReactedReaction?.type,
       };
     })
   );

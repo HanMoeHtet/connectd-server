@@ -1,6 +1,6 @@
 import { model, Schema } from '@src/config/database.config';
 import { CommentDocument } from '@src/resources/comment/comment.model';
-import { FriendRequestDocument } from '@src/resources/friend/friend-request.model';
+import { FriendRequestDocument } from '@src/resources/friend-request/friend-request.model';
 import { FriendDocument } from '@src/resources/friend/friend.model';
 import { PostDocument } from '@src/resources/post/post.model';
 import { ReactionDocument } from '@src/resources/reaction/reaction.model';

@@ -3,7 +3,7 @@ import db, { init as initDb } from '@src/config/database.config';
 import { register } from '@src/resources/register';
 import '@src/services/i18next';
 import '@src/services/mail';
-// import '@src/config/ws.config';
+import '@src/config/ws.config';
 import '@src/ws';
 import app, { init as initServer } from '@src/config/app.config';
 

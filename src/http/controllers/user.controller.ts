@@ -5,6 +5,14 @@ import { UserModel } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
+import {
+  areUsersFriends as areUsersFriendsFunc,
+  hasPendingFriendRequest,
+  populateUserDocumentWithFriends,
+  populateUserDocumentWithSentFriendRequests,
+  UserDocumentWithFriends,
+  UserDocumentWithSentFriendRequests,
+} from '@src/utils/friend';
 import { compareMongooseIds } from '@src/utils/helpers';
 import {
   prepareBasicProfileResponse,
@@ -192,9 +200,11 @@ export const getPostsByUser = async (
         _id: { $in: post.reactionIds },
       }).select({
         type: 1,
+        userId: 1,
       });
-      const userReactedRection = reactions.find(
-        (reaction) => reaction.userId === res.locals.user._id
+
+      const userReactedRection = reactions.find((reaction) =>
+        compareMongooseIds(reaction.userId, userId)
       );
 
       const { reactionIds, ...rest } = post.toJSON();
@@ -238,6 +248,7 @@ export const show = async (
       avatar: 1,
       postIds: 1,
       friendIds: 1,
+      sentFriendRequestIds: 1,
     });
   } catch (e) {
     next(e);
@@ -247,14 +258,39 @@ export const show = async (
   const friendCount = user.friendIds.length;
   const postCount = user.postIds.length;
 
-  const authUser = res.locals.user;
+  let authUser = res.locals.user;
+
+  authUser = await populateUserDocumentWithFriends(authUser);
+  user = await populateUserDocumentWithFriends(user);
 
   const isAuthUser = compareMongooseIds(userId, authUser._id);
-  const areUsersFriends = isAuthUser
-    ? undefined
-    : user.friendIds.includes(authUser._id);
 
-  const { postIds, friendIds, ...rest } = user.toJSON();
+  let areUsersFriends;
+  let hasSentFriendRequest;
+  let hasReceivedFriendRequest;
+
+  if (!isAuthUser) {
+    areUsersFriends = areUsersFriendsFunc(
+      authUser as UserDocumentWithFriends,
+      user as UserDocumentWithFriends
+    );
+
+    authUser = await populateUserDocumentWithSentFriendRequests(authUser);
+
+    hasSentFriendRequest = hasPendingFriendRequest(
+      authUser as UserDocumentWithSentFriendRequests,
+      user
+    );
+
+    user = await populateUserDocumentWithSentFriendRequests(user);
+
+    hasReceivedFriendRequest = hasPendingFriendRequest(
+      user as UserDocumentWithSentFriendRequests,
+      authUser
+    );
+  }
+
+  const { postIds, friendIds, sentFriendRequestIds, ...rest } = user.toJSON();
 
   res.status(SUCCESS).json({
     data: {
@@ -265,6 +301,8 @@ export const show = async (
       },
       isAuthUser,
       areUsersFriends,
+      hasSentFriendRequest,
+      hasReceivedFriendRequest,
     },
   });
 };
