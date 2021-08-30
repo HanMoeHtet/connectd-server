@@ -3,10 +3,13 @@ import { RequestError } from '@src/http/error-handlers/handler';
 import FriendRequestModel, {
   FriendRequestDocument,
 } from '@src/resources/friend-request/friend-request.model';
-import { FriendDocument } from '@src/resources/friend/friend.model';
+import FriendModel, {
+  FriendDocument,
+} from '@src/resources/friend/friend.model';
 import { UserDocument } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { compareMongooseIds } from './helpers';
+import { findFriendRequestReceivedNotificationByFriendRequestId } from './notification';
 
 export interface FriendDocumentWithUser extends FriendDocument {
   user: UserDocument;
@@ -171,6 +174,31 @@ export const findFriendRequest = async (friendRequestId?: string) => {
   return friendRequest;
 };
 
+export const findFriend = async (friendId?: string) => {
+  if (!friendId) {
+    throw new RequestError(
+      BAD_REQUEST,
+      i18next.t('missing', { field: 'friendId' })
+    );
+  }
+
+  let friend;
+  try {
+    friend = await FriendModel.findById(friendId);
+  } catch (err) {
+    throw new RequestError(BAD_REQUEST, i18next.t('httpError.500'), err);
+  }
+
+  if (!friend) {
+    throw new RequestError(
+      BAD_REQUEST,
+      i18next.t('notFound', { field: 'friend' })
+    );
+  }
+
+  return friend;
+};
+
 export const areUsersFriends = (
   userOne: UserDocumentWithFriends,
   userTwo: UserDocumentWithFriends
@@ -193,7 +221,18 @@ export const hasPendingFriendRequest = (
   sender: UserDocumentWithSentFriendRequests,
   receiver: UserDocument
 ) => {
-  return sender.sentFriendRequests.some((sentFriendRequest) =>
+  return (
+    sender.sentFriendRequests.find((sentFriendRequest) =>
+      compareMongooseIds(sentFriendRequest.receiverId, receiver._id)
+    ) !== undefined
+  );
+};
+
+export const getPendingFriendRequest = (
+  sender: UserDocumentWithSentFriendRequests,
+  receiver: UserDocument
+) => {
+  return sender.sentFriendRequests.find((sentFriendRequest) =>
     compareMongooseIds(sentFriendRequest.receiverId, receiver._id)
   );
 };
@@ -232,6 +271,36 @@ export const canCreateFriendRequest = async (
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyPending')
+    );
+  }
+
+  return true;
+};
+
+export const canCancelFriendRequest = async (
+  sender: UserDocument,
+  friendRequest:
+    | FriendRequestDocument
+    | FriendRequestDocumentWithReceiverAndSender
+) => {
+  sender = await populateUserDocumentWithFriends(sender);
+  friendRequest = await populateFriendRequestDocumentWithReceiverAndSender(
+    friendRequest
+  );
+
+  if (compareMongooseIds(friendRequest.senderId, sender._id)) {
+    throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantCancel'));
+  }
+
+  if (
+    areUsersFriends(
+      sender as UserDocumentWithFriends,
+      (friendRequest as FriendRequestDocumentWithReceiverAndSender).receiver
+    )
+  ) {
+    throw new RequestError(
+      BAD_REQUEST,
+      i18next.t('friendRequest.alreadyFriends')
     );
   }
 
@@ -292,6 +361,84 @@ export const canRejectFriendRequest = async (
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyFriends')
+    );
+  }
+
+  return true;
+};
+
+export const deleteFriendRequestHelper = async (
+  friendRequest: FriendRequestDocument
+) => {
+  friendRequest = await friendRequest
+    .populate({
+      path: 'sender',
+      select: {
+        sentFriendRequestIds: 1,
+      },
+    })
+    .populate({
+      path: 'receiver',
+      select: {
+        receivedFriendRequestIds: 1,
+        notificationIds: 1,
+      },
+    })
+    .execPopulate();
+
+  if (!friendRequest.sender || !friendRequest.receiver) {
+    throw new RequestError(SERVER_ERROR, i18next.t('httpError.500'));
+    return;
+  }
+
+  const sender = friendRequest.sender;
+  sender.sentFriendRequestIds.splice(
+    sender.sentFriendRequestIds.indexOf(friendRequest._id),
+    1
+  );
+  await sender.save();
+
+  const receiver = friendRequest.receiver;
+  receiver.receivedFriendRequestIds.splice(
+    receiver.receivedFriendRequestIds.indexOf(friendRequest._id),
+    1
+  );
+  await receiver.save();
+
+  await friendRequest.delete();
+
+  const deleteNotification = async () => {
+    let notification;
+    try {
+      notification =
+        await findFriendRequestReceivedNotificationByFriendRequestId(
+          friendRequest._id
+        );
+    } catch (e) {
+      console.error(e);
+      return;
+    }
+
+    receiver.notificationIds.splice(
+      receiver.notificationIds.indexOf(notification._id),
+      1
+    );
+    await receiver.save();
+
+    await notification.delete();
+  };
+
+  deleteNotification();
+};
+
+export const canUnfriend = async (
+  user: UserDocument,
+  friend: FriendDocument
+) => {
+  if (!user.friendIds.includes(String(friend._id))) {
+    throw new RequestError(
+      BAD_REQUEST,
+      i18next.t('friendRequest.cantUnfriend')
     );
   }
 

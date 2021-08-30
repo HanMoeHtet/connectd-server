@@ -1,27 +1,28 @@
-import FriendRequestModel from '@src/resources/friend-request/friend-request.model';
-import { Request } from '@src/types/requests';
-import { AuthResponse } from '@src/types/responses';
-import { NextFunction } from 'express';
-import { findUser } from './user.controller';
-import { emit as emitFriendRequestReceived } from '@src/ws/emitters/friend-request-received.emitter';
-import { emit as emitFriendRequestAccepted } from '@src/ws/emitters/friend-request-accepted.emitter';
 import { MAX_POSTS_PER_PAGE, SERVER_ERROR, SUCCESS } from '@src/constants';
+import FriendRequestModel from '@src/resources/friend-request/friend-request.model';
+import FriendModel from '@src/resources/friend/friend.model';
 import NotificationModel, {
   NotificationType,
 } from '@src/resources/notification/notification.model';
+import i18next from '@src/services/i18next';
+import { Request } from '@src/types/requests';
+import { AuthResponse } from '@src/types/responses';
 import {
   canAcceptFriendRequest,
+  canCancelFriendRequest,
   canCreateFriendRequest,
   canRejectFriendRequest,
+  canUnfriend,
+  deleteFriendRequestHelper,
+  findFriend,
   findFriendRequest,
-  isUserDocumentWithFriends,
-  populateUserDocumentWithFriends,
-  UserDocumentWithFriends,
 } from '@src/utils/friend';
-import FriendModel from '@src/resources/friend/friend.model';
-import { RequestError } from '../error-handlers/handler';
-import i18next from '@src/services/i18next';
 import { findFriendRequestReceivedNotificationByFriendRequestId } from '@src/utils/notification';
+import { emit as emitFriendRequestAccepted } from '@src/ws/emitters/friend-request-accepted.emitter';
+import { emit as emitFriendRequestReceived } from '@src/ws/emitters/friend-request-received.emitter';
+import { NextFunction } from 'express';
+import { RequestError } from '../error-handlers/handler';
+import { findUser } from './user.controller';
 
 interface GetFriendsByUserRequest
   extends Request<{
@@ -204,6 +205,47 @@ export const createFriendRequest = async (
   });
 };
 
+interface CancelFriendRequestRequest
+  extends Request<{
+    params: {
+      friendRequestId?: string;
+    };
+  }> {}
+
+export const cancelFriendRequest = async (
+  req: CancelFriendRequestRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { friendRequestId } = req.params;
+  const authUser = res.locals.user;
+
+  let friendRequest;
+
+  try {
+    friendRequest = await findFriendRequest(friendRequestId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  try {
+    await canCancelFriendRequest(authUser, friendRequest);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  try {
+    await deleteFriendRequestHelper(friendRequest);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  res.status(SUCCESS).end();
+};
+
 interface AcceptFriendRequestRequest
   extends Request<{
     params: {
@@ -359,61 +401,64 @@ export const rejectFriendRequest = async (
     return;
   }
 
-  friendRequest = await friendRequest
+  try {
+    await deleteFriendRequestHelper(friendRequest);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  res.status(SUCCESS).end();
+};
+
+interface UnfriendRequest
+  extends Request<{
+    params: {
+      friendId?: string;
+    };
+  }> {}
+export const unfriend = async (
+  req: UnfriendRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { friendId } = req.params;
+
+  let authUser = res.locals.user;
+
+  let friend;
+  try {
+    friend = await findFriend(friendId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  try {
+    await canUnfriend(authUser, friend);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  friend = await friend
     .populate({
-      path: 'sender',
+      path: 'user',
       select: {
-        sentFriendRequestIds: 1,
-      },
-    })
-    .populate({
-      path: 'receiver',
-      select: {
-        receivedFriendRequestIds: 1,
-        notificationIds: 1,
+        friendIds: 1,
       },
     })
     .execPopulate();
 
-  if (!friendRequest.sender || !friendRequest.receiver) {
+  if (!friend.user) {
     next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
     return;
   }
 
-  const sender = friendRequest.sender;
-  sender.sentFriendRequestIds.splice(
-    sender.sentFriendRequestIds.indexOf(friendRequest._id),
-    1
-  );
-  await sender.save();
+  authUser.friendIds.splice(authUser.friendIds.indexOf(friend._id));
+  await authUser.save();
+  await friend.delete();
 
-  const receiver = friendRequest.receiver;
-  receiver.receivedFriendRequestIds.splice(
-    receiver.receivedFriendRequestIds.indexOf(friendRequest._id),
-    1
-  );
-  await receiver.save();
-
-  await friendRequest.delete();
-
-  res.status(SUCCESS).end();
-
-  let notification;
-
-  try {
-    notification = await findFriendRequestReceivedNotificationByFriendRequestId(
-      friendRequest._id
-    );
-  } catch (e) {
-    console.error(e);
-    return;
-  }
-
-  receiver.notificationIds.splice(
-    receiver.notificationIds.indexOf(notification._id),
-    1
-  );
-  await receiver.save();
-
-  await notification.delete();
+  const friendUser = friend.user;
+  friendUser.friendIds.splice(friendUser.indexOf(friend._id));
 };

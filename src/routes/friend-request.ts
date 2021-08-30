@@ -8,5 +8,6 @@ router.use(checkAuth);
 
 router.post('/:friendRequestId/accept', FriendController.acceptFriendRequest);
 router.post('/:friendRequestId/reject', FriendController.rejectFriendRequest);
+router.post('/:friendRequestId/cancel', FriendController.cancelFriendRequest);
 
 export default router;

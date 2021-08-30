@@ -7,6 +7,7 @@ import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
 import {
   areUsersFriends as areUsersFriendsFunc,
+  getPendingFriendRequest,
   hasPendingFriendRequest,
   populateUserDocumentWithFriends,
   populateUserDocumentWithSentFriendRequests,
@@ -266,8 +267,8 @@ export const show = async (
   const isAuthUser = compareMongooseIds(userId, authUser._id);
 
   let areUsersFriends;
-  let hasSentFriendRequest;
-  let hasReceivedFriendRequest;
+  let sentFriendRequestId;
+  let receivedFriendRequestId;
 
   if (!isAuthUser) {
     areUsersFriends = areUsersFriendsFunc(
@@ -277,17 +278,17 @@ export const show = async (
 
     authUser = await populateUserDocumentWithSentFriendRequests(authUser);
 
-    hasSentFriendRequest = hasPendingFriendRequest(
+    sentFriendRequestId = getPendingFriendRequest(
       authUser as UserDocumentWithSentFriendRequests,
       user
-    );
+    )?._id;
 
     user = await populateUserDocumentWithSentFriendRequests(user);
 
-    hasReceivedFriendRequest = hasPendingFriendRequest(
+    receivedFriendRequestId = getPendingFriendRequest(
       user as UserDocumentWithSentFriendRequests,
       authUser
-    );
+    )?._id;
   }
 
   const { postIds, friendIds, sentFriendRequestIds, ...rest } = user.toJSON();
@@ -301,8 +302,8 @@ export const show = async (
       },
       isAuthUser,
       areUsersFriends,
-      hasSentFriendRequest,
-      hasReceivedFriendRequest,
+      sentFriendRequestId,
+      receivedFriendRequestId,
     },
   });
 };
