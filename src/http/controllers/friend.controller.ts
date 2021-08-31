@@ -305,24 +305,18 @@ export const acceptFriendRequest = async (
   }
 
   const createdAt = new Date();
-  let newFriendForSender = new FriendModel({
-    userId: friendRequest.receiverId,
+  let friend = new FriendModel({
+    userIds: [friendRequest.senderId, friendRequest.receiverId],
     createdAt,
   });
-  await newFriendForSender.save();
-
-  let newFriendForReceiver = new FriendModel({
-    userId: friendRequest.senderId,
-    createdAt,
-  });
-  await newFriendForReceiver.save();
+  await friend.save();
 
   const sender = friendRequest.sender;
   sender.sentFriendRequestIds.splice(
     sender.sentFriendRequestIds.indexOf(friendRequest._id),
     1
   );
-  sender.friendIds.push(newFriendForSender._id);
+  sender.friendIds.push(friend._id);
   await sender.save();
 
   const receiver = friendRequest.receiver;
@@ -330,7 +324,7 @@ export const acceptFriendRequest = async (
     receiver.receivedFriendRequestIds.indexOf(friendRequest._id),
     1
   );
-  receiver.friendIds.push(newFriendForReceiver._id);
+  receiver.friendIds.push(friend._id);
   await receiver.save();
 
   await friendRequest.delete();

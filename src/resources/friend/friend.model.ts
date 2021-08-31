@@ -3,14 +3,14 @@ import { model, Schema } from '@src/config/database.config';
 import { Document } from 'mongoose';
 
 export interface Friend {
-  userId: string;
-  user?: UserDocument;
+  userIds: [string, string];
+  users?: [UserDocument, UserDocument];
   createdAt: Date;
 }
 
 const FriendSchema = new Schema<Friend>({
-  userId: {
-    type: String,
+  userIds: {
+    type: [String],
     required: true,
   },
   createdAt: {
@@ -19,11 +19,10 @@ const FriendSchema = new Schema<Friend>({
   },
 });
 
-FriendSchema.virtual('user', {
+FriendSchema.virtual('users', {
   ref: 'User',
-  localField: 'userId',
+  localField: 'userIds',
   foreignField: '_id',
-  justOne: true,
 });
 
 FriendSchema.set('toObject', { virtuals: true });

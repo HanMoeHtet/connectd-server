@@ -200,21 +200,15 @@ export const findFriend = async (friendId?: string) => {
 };
 
 export const areUsersFriends = (
-  userOne: UserDocumentWithFriends,
-  userTwo: UserDocumentWithFriends
+  userOne: UserDocument,
+  userTwo: UserDocument
 ) => {
-  const userOneFriends = userOne.friends;
-  const userTwoFriends = userTwo.friends;
+  const userOneFriendIds = userOne.friendIds;
+  const userTwoFriendIds = userTwo.friendIds;
 
-  if (userOneFriends.length < userTwoFriends.length) {
-    return userOneFriends.some((friend) =>
-      compareMongooseIds(friend.userId, userTwo._id)
-    );
-  } else {
-    return userTwoFriends.some((friend) =>
-      compareMongooseIds(friend.userId, userOne._id)
-    );
-  }
+  return userOneFriendIds.some((friendId) =>
+    userTwoFriendIds.includes(String(friendId))
+  );
 };
 
 export const hasPendingFriendRequest = (
@@ -241,19 +235,11 @@ export const canCreateFriendRequest = async (
   sender: UserDocument,
   receiver: UserDocument
 ) => {
-  sender = await populateUserDocumentWithFriends(sender);
-  receiver = await populateUserDocumentWithFriends(receiver);
-
   if (compareMongooseIds(sender._id, receiver._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantSend'));
   }
 
-  if (
-    areUsersFriends(
-      sender as UserDocumentWithFriends,
-      receiver as UserDocumentWithFriends
-    )
-  ) {
+  if (areUsersFriends(sender, receiver)) {
     throw new RequestError(
       BAD_REQUEST,
       i18next.t('friendRequest.alreadyFriends')
@@ -283,7 +269,6 @@ export const canCancelFriendRequest = async (
     | FriendRequestDocument
     | FriendRequestDocumentWithReceiverAndSender
 ) => {
-  sender = await populateUserDocumentWithFriends(sender);
   friendRequest = await populateFriendRequestDocumentWithReceiverAndSender(
     friendRequest
   );
@@ -294,7 +279,7 @@ export const canCancelFriendRequest = async (
 
   if (
     areUsersFriends(
-      sender as UserDocumentWithFriends,
+      sender,
       (friendRequest as FriendRequestDocumentWithReceiverAndSender).receiver
     )
   ) {
@@ -313,7 +298,6 @@ export const canAcceptFriendRequest = async (
     | FriendRequestDocument
     | FriendRequestDocumentWithReceiverAndSender
 ) => {
-  receiver = await populateUserDocumentWithFriends(receiver);
   friendRequest = await populateFriendRequestDocumentWithReceiverAndSender(
     friendRequest
   );
@@ -324,7 +308,7 @@ export const canAcceptFriendRequest = async (
 
   if (
     areUsersFriends(
-      receiver as UserDocumentWithFriends,
+      receiver,
       (friendRequest as FriendRequestDocumentWithReceiverAndSender).sender
     )
   ) {
@@ -343,7 +327,6 @@ export const canRejectFriendRequest = async (
     | FriendRequestDocument
     | FriendRequestDocumentWithReceiverAndSender
 ) => {
-  receiver = await populateUserDocumentWithFriends(receiver);
   friendRequest = await populateFriendRequestDocumentWithReceiverAndSender(
     friendRequest
   );
@@ -354,7 +337,7 @@ export const canRejectFriendRequest = async (
 
   if (
     areUsersFriends(
-      receiver as UserDocumentWithFriends,
+      receiver,
       (friendRequest as FriendRequestDocumentWithReceiverAndSender).sender
     )
   ) {

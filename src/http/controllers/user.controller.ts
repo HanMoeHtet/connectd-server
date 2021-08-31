@@ -8,10 +8,7 @@ import { AuthResponse } from '@src/types/responses';
 import {
   areUsersFriends as areUsersFriendsFunc,
   getPendingFriendRequest,
-  hasPendingFriendRequest,
-  populateUserDocumentWithFriends,
   populateUserDocumentWithSentFriendRequests,
-  UserDocumentWithFriends,
   UserDocumentWithSentFriendRequests,
 } from '@src/utils/friend';
 import { compareMongooseIds } from '@src/utils/helpers';
@@ -261,9 +258,6 @@ export const show = async (
 
   let authUser = res.locals.user;
 
-  authUser = await populateUserDocumentWithFriends(authUser);
-  user = await populateUserDocumentWithFriends(user);
-
   const isAuthUser = compareMongooseIds(userId, authUser._id);
 
   let areUsersFriends;
@@ -271,10 +265,7 @@ export const show = async (
   let receivedFriendRequestId;
 
   if (!isAuthUser) {
-    areUsersFriends = areUsersFriendsFunc(
-      authUser as UserDocumentWithFriends,
-      user as UserDocumentWithFriends
-    );
+    areUsersFriends = areUsersFriendsFunc(authUser, user);
 
     authUser = await populateUserDocumentWithSentFriendRequests(authUser);
 
