@@ -4,6 +4,7 @@ import FriendModel from '@src/resources/friend/friend.model';
 import NotificationModel, {
   NotificationType,
 } from '@src/resources/notification/notification.model';
+import UserModel, { UserDocument } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { Request } from '@src/types/requests';
 import { AuthResponse } from '@src/types/responses';
@@ -16,6 +17,7 @@ import {
   deleteFriendRequestHelper,
   findFriend,
   findFriendRequest,
+  areUsersFriends as areUsersFriendsFunc,
 } from '@src/utils/friend';
 import { findFriendRequestReceivedNotificationByFriendRequestId } from '@src/utils/notification';
 import { emit as emitFriendRequestAccepted } from '@src/ws/emitters/friend-request-accepted.emitter';
@@ -41,7 +43,7 @@ export const getFriendsByUser = async (
 ) => {
   const { userId } = req.params;
 
-  let user;
+  let user: UserDocument;
 
   try {
     user = await findUser(userId);
@@ -68,14 +70,6 @@ export const getFriendsByUser = async (
       sort: { createdAt: -1 },
       limit: _limit,
     },
-    populate: {
-      path: 'user',
-      select: {
-        username: 1,
-        avatar: 1,
-        friendIds: 1,
-      },
-    },
   };
 
   user = await user.populate(populateOptions).execPopulate();
@@ -94,17 +88,22 @@ export const getFriendsByUser = async (
   try {
     responseFriends = await Promise.all(
       friends.map(async (friend) => {
-        console.log(friend);
-        if (!friend.user) {
-          throw new RequestError(SERVER_ERROR, i18next.t('httpError.500'));
-        }
+        const friendUserId =
+          friend.userIds[0] === user._id
+            ? friend.userIds[1]
+            : friend.userIds[0];
+        let friendUser = await findUser(friendUserId, {
+          friendIds: 1,
+          username: 1,
+          avatar: 1,
+        });
 
-        const areUsersFriends = friend.user.friendIds.includes(authUser._id);
+        const areUsersFriends = areUsersFriendsFunc(authUser, friendUser);
 
-        const { friendIds, ...rest } = friend.user.toJSON();
+        const { friendIds, ...rest } = friendUser.toJSON();
 
         const responseFriend = {
-          ...friend.toObject(),
+          ...friend.toJSON(),
           user: rest,
         };
 
@@ -169,7 +168,11 @@ export const createFriendRequest = async (
   user.receivedFriendRequestIds.push(friendRequest._id);
   await user.save();
 
-  res.status(SUCCESS).end();
+  res.status(SUCCESS).json({
+    data: {
+      friendRequestId: friendRequest._id,
+    },
+  });
 
   const notification = new NotificationModel({
     type: NotificationType.FRIEND_REQUEST_RECEIVED,
@@ -327,9 +330,17 @@ export const acceptFriendRequest = async (
   receiver.friendIds.push(friend._id);
   await receiver.save();
 
-  await friendRequest.delete();
+  try {
+    await deleteFriendRequestHelper(friendRequest);
+  } catch (e) {
+    console.error(e);
+  }
 
-  res.status(SUCCESS).end();
+  res.status(SUCCESS).json({
+    data: {
+      friendId: friend._id,
+    },
+  });
 
   const notification = new NotificationModel({
     type: NotificationType.FRIEND_REQUEST_ACCEPTED,
@@ -435,24 +446,17 @@ export const unfriend = async (
     return;
   }
 
-  friend = await friend
-    .populate({
-      path: 'user',
-      select: {
-        friendIds: 1,
-      },
-    })
-    .execPopulate();
-
-  if (!friend.user) {
-    next(new RequestError(SERVER_ERROR, i18next.t('httpError.500')));
-    return;
-  }
+  const friendUserId =
+    friend.userIds[0] === authUser._id ? friend.userIds[1] : friend.userIds[0];
+  let friendUser = await findUser(friendUserId, { friendIds: 1 });
 
   authUser.friendIds.splice(authUser.friendIds.indexOf(friend._id));
   await authUser.save();
+
+  friendUser.friendIds.splice(friendUser.friendIds.indexOf(friend._id));
+  await friendUser.save();
+
   await friend.delete();
 
-  const friendUser = friend.user;
-  friendUser.friendIds.splice(friendUser.indexOf(friend._id));
+  res.status(SUCCESS).end();
 };

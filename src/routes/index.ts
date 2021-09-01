@@ -7,6 +7,7 @@ import postRoutes from './post';
 import commentRoutes from './comment';
 import replyRoutes from './reply';
 import friendRequestRoutes from './friend-request';
+import friendRoutes from './friend';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/posts', postRoutes);
 router.use('/comments', commentRoutes);
 router.use('/replies', replyRoutes);
 router.use('/friend-requests', friendRequestRoutes);
+router.use('/friends', friendRoutes);
 
 export default router;

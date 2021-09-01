@@ -203,12 +203,18 @@ export const areUsersFriends = (
   userOne: UserDocument,
   userTwo: UserDocument
 ) => {
+  return getFriendId(userOne, userTwo) !== undefined;
+};
+
+export const getFriendId = (userOne: UserDocument, userTwo: UserDocument) => {
   const userOneFriendIds = userOne.friendIds;
   const userTwoFriendIds = userTwo.friendIds;
 
-  return userOneFriendIds.some((friendId) =>
+  const friendId = userOneFriendIds.find((friendId) =>
     userTwoFriendIds.includes(String(friendId))
   );
+
+  return friendId;
 };
 
 export const hasPendingFriendRequest = (
@@ -273,7 +279,7 @@ export const canCancelFriendRequest = async (
     friendRequest
   );
 
-  if (compareMongooseIds(friendRequest.senderId, sender._id)) {
+  if (!compareMongooseIds(friendRequest.senderId, sender._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('friendRequest.cantCancel'));
   }
 
@@ -371,7 +377,6 @@ export const deleteFriendRequestHelper = async (
 
   if (!friendRequest.sender || !friendRequest.receiver) {
     throw new RequestError(SERVER_ERROR, i18next.t('httpError.500'));
-    return;
   }
 
   const sender = friendRequest.sender;
