@@ -344,6 +344,7 @@ export const acceptFriendRequest = async (
 
   const notification = new NotificationModel({
     type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+    friendUserId: receiver._id,
     createdAt,
   });
 
@@ -352,24 +353,15 @@ export const acceptFriendRequest = async (
   sender.notificationIds.push(notification._id);
   await sender.save();
 
-  emitFriendRequestAccepted({
+  emitFriendRequestAccepted(String(sender._id), {
     _id: notification._id,
     hasBeenRead: notification.hasBeenRead,
     hasBeenSeen: notification.hasBeenSeen,
     type: NotificationType.FRIEND_REQUEST_ACCEPTED,
-    friendRequest: {
-      _id: friendRequest._id,
-      sender: {
-        _id: sender._id,
-        username: sender.username,
-        avatar: sender.avatar,
-      },
-      receiver: {
-        _id: receiver._id,
-        username: receiver.username,
-        avatar: receiver.avatar,
-      },
-      createdAt: friendRequest.createdAt,
+    friendUser: {
+      _id: receiver._id,
+      username: receiver.username,
+      avatar: receiver.avatar,
     },
     createdAt: notification.createdAt,
   });

@@ -79,6 +79,13 @@ export const getNotifications = async (
           },
         ],
       },
+      {
+        path: 'friendUser',
+        select: {
+          username: 1,
+          avatar: 1,
+        },
+      },
     ],
   };
 

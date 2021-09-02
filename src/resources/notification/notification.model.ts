@@ -1,6 +1,7 @@
 import { model, Schema } from '@src/config/database.config';
 import { Document } from 'mongoose';
 import { FriendRequestDocument } from '../friend-request/friend-request.model';
+import { UserDocument } from '../user/user.model';
 
 export enum NotificationType {
   FRIEND_REQUEST_RECEIVED = 'FRIEND_REQUEST_RECEIVED',
@@ -22,6 +23,8 @@ export interface FriendRequestReceivedNotification extends BaseNotification {
 
 export interface FriendRequestAcceptedNotification extends BaseNotification {
   type: NotificationType.FRIEND_REQUEST_ACCEPTED;
+  friendUserId: string;
+  friendUser?: UserDocument;
 }
 
 export type Notification =
@@ -46,6 +49,10 @@ const NotificationSchema = new Schema<Notification>({
     type: String,
     index: true,
   },
+  friendUserId: {
+    type: String,
+    index: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -55,6 +62,13 @@ const NotificationSchema = new Schema<Notification>({
 NotificationSchema.virtual('friendRequest', {
   ref: 'FriendRequest',
   localField: 'friendRequestId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+NotificationSchema.virtual('friendUser', {
+  ref: 'User',
+  localField: 'friendUserId',
   foreignField: '_id',
   justOne: true,
 });
