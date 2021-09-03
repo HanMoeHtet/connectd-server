@@ -3,6 +3,10 @@ import * as cache from '@src/services/cache';
 import { AuthSocket } from '@src/types/ws';
 import { getNameForUserSockets } from '@src/utils/cache';
 import checkAuth from '@src/ws/middlewares/check-auth.middleware';
+import {
+  userOnlineStatusEmitter,
+  UserOnlineStatusEventType,
+} from '@src/events/user-online-status.event';
 
 io.use(checkAuth);
 
@@ -13,7 +17,7 @@ const onConnection = async (socket: AuthSocket) => {
   socket.join(userId);
 
   if ((await cache.getSetCount(socketsSetName)) === 0) {
-    // Raise event to update user's online status
+    userOnlineStatusEmitter.emit(UserOnlineStatusEventType.USER_ONLINE);
   }
 
   await cache.addToSet(socketsSetName, socket.id);
@@ -26,7 +30,7 @@ const onDisconnect = async (socket: AuthSocket) => {
   await cache.removeFromSet(socketsSetName, socket.id);
 
   if ((await cache.getSetCount(socketsSetName)) === 0) {
-    // Raise event to update user's online status
+    userOnlineStatusEmitter.emit(UserOnlineStatusEventType.USER_OFFLINE);
   }
 };
 

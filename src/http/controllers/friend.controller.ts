@@ -19,6 +19,7 @@ import {
   findFriendRequest,
   areUsersFriends as areUsersFriendsFunc,
 } from '@src/utils/friend';
+import { compareMongooseIds } from '@src/utils/helpers';
 import { findFriendRequestReceivedNotificationByFriendRequestId } from '@src/utils/notification';
 import { emit as emitFriendRequestAccepted } from '@src/ws/emitters/friend-request-accepted.emitter';
 import { emit as emitFriendRequestReceived } from '@src/ws/emitters/friend-request-received.emitter';
@@ -88,10 +89,9 @@ export const getFriendsByUser = async (
   try {
     responseFriends = await Promise.all(
       friends.map(async (friend) => {
-        const friendUserId =
-          friend.userIds[0] === user._id
-            ? friend.userIds[1]
-            : friend.userIds[0];
+        const friendUserId = compareMongooseIds(friend.userIds[0], user._id)
+          ? friend.userIds[1]
+          : friend.userIds[0];
         let friendUser = await findUser(friendUserId, {
           friendIds: 1,
           username: 1,
@@ -438,8 +438,9 @@ export const unfriend = async (
     return;
   }
 
-  const friendUserId =
-    friend.userIds[0] === authUser._id ? friend.userIds[1] : friend.userIds[0];
+  const friendUserId = compareMongooseIds(friend.userIds[0], authUser._id)
+    ? friend.userIds[1]
+    : friend.userIds[0];
   let friendUser = await findUser(friendUserId, { friendIds: 1 });
 
   authUser.friendIds.splice(authUser.friendIds.indexOf(friend._id));

@@ -29,6 +29,7 @@ export interface User extends UnverifiedUser {
   receivedFriendRequests?: FriendRequestDocument[];
   notificationIds: string[];
   notifications?: NotificationDocument[];
+  lastSeenAt: Date | null;
 }
 
 const UserSchema = new Schema<User>(
@@ -111,6 +112,10 @@ const UserSchema = new Schema<User>(
         ref: 'Notification',
       },
     ],
+    lastSeenAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { id: false }
 );

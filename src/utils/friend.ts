@@ -432,3 +432,38 @@ export const canUnfriend = async (
 
   return true;
 };
+
+export const getFriendUserIdsByUser = async (user: UserDocument) => {
+  let friends = await FriendModel.find({
+    _id: {
+      $in: user.friendIds,
+    },
+  })
+    .select({ userIds: 1 })
+    .populate({
+      path: 'users',
+      select: {
+        lastSeenAt: 1,
+      },
+      match: {
+        // Only return users that are online
+        lastSeenAt: {
+          $eq: null,
+          $exists: true,
+        },
+      },
+    })
+    .where({
+      user: {
+        $ne: null,
+      },
+    });
+
+  const friendUserIds: string[] = friends.map((friend) =>
+    compareMongooseIds(friend.userIds[0], user._id)
+      ? friend.userIds[1]
+      : friend.userIds[0]
+  );
+
+  return friendUserIds;
+};
