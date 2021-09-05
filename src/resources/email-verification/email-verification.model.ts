@@ -1,5 +1,5 @@
 import { model, Schema } from '@src/config/database.config';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface EmailVerificationData {
   userId: string;
@@ -8,7 +8,7 @@ export interface EmailVerificationData {
 
 const EmailVerificationSchema = new Schema<EmailVerificationData>({
   userId: {
-    type: String,
+    type: Types.ObjectId,
     required: true,
     unique: true,
   },

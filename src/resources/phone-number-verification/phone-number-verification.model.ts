@@ -1,5 +1,5 @@
 import { model, Schema } from '@src/config/database.config';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface PhoneNumberVerificationData {
   userId: string;
@@ -9,7 +9,7 @@ export interface PhoneNumberVerificationData {
 
 const PhoneNumberVerificationSchema = new Schema<PhoneNumberVerificationData>({
   userId: {
-    type: String,
+    type: Types.ObjectId,
     required: true,
     unique: true,
   },

@@ -11,35 +11,42 @@ import {
 io.use(checkAuth);
 
 const onConnection = async (socket: AuthSocket) => {
-  const userId = String(socket.data.user._id);
+  const authUser = socket.data.user;
+  const userId = String(authUser._id);
   const socketsSetName = getNameForUserSockets(userId);
 
   socket.join(userId);
 
   if ((await cache.getSetCount(socketsSetName)) === 0) {
-    userOnlineStatusEmitter.emit(UserOnlineStatusEventType.USER_ONLINE);
+    userOnlineStatusEmitter.emit(
+      UserOnlineStatusEventType.USER_ONLINE,
+      authUser
+    );
   }
 
   await cache.addToSet(socketsSetName, socket.id);
 };
 
 const onDisconnect = async (socket: AuthSocket) => {
-  const userId = String(socket.data.user._id);
+  const authUser = socket.data.user;
+  const userId = String(authUser._id);
   const socketsSetName = getNameForUserSockets(userId);
 
   await cache.removeFromSet(socketsSetName, socket.id);
 
   if ((await cache.getSetCount(socketsSetName)) === 0) {
-    userOnlineStatusEmitter.emit(UserOnlineStatusEventType.USER_OFFLINE);
+    userOnlineStatusEmitter.emit(
+      UserOnlineStatusEventType.USER_OFFLINE,
+      authUser
+    );
   }
 };
 
-io.on('connection', (socket: AuthSocket) => {
-  onConnection(socket);
+io.on('connection', async (socket: AuthSocket) => {
+  await onConnection(socket);
 
-  socket.on('disconnect', (reason) => {
-    console.log(`${socket.data.user.username} - ${reason}`);
-    onDisconnect(socket);
+  socket.on('disconnect', async (reason) => {
+    await onDisconnect(socket);
   });
 });
 

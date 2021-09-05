@@ -1,7 +1,5 @@
-import FriendModel from '@src/resources/friend/friend.model';
-import UserModel, { UserDocument } from '@src/resources/user/user.model';
-import { getFriendUserIdsByUser } from '@src/utils/friend';
-import { compareMongooseIds } from '@src/utils/helpers';
+import { UserDocument } from '@src/resources/user/user.model';
+import { getOnlineFriendUserIdsByUser } from '@src/utils/friend';
 import {
   emitUserOffline,
   emitUserOnline,
@@ -21,9 +19,9 @@ userOnlineStatusEmitter.on(
     user.lastSeenAt = null;
     await user.save();
 
-    const friendUserIds = await getFriendUserIdsByUser(user);
+    const onlineFriendUserIds = await getOnlineFriendUserIdsByUser(user);
 
-    emitUserOnline(friendUserIds, { userId: String(user._id) });
+    emitUserOnline(onlineFriendUserIds, { userId: String(user._id) });
   }
 );
 
@@ -33,8 +31,8 @@ userOnlineStatusEmitter.on(
     user.lastSeenAt = new Date();
     await user.save();
 
-    const friendUserIds = await getFriendUserIdsByUser(user);
+    const onlineFriendUserIds = await getOnlineFriendUserIdsByUser(user);
 
-    emitUserOffline(friendUserIds, { userId: String(user._id) });
+    emitUserOffline(onlineFriendUserIds, { userId: String(user._id) });
   }
 );

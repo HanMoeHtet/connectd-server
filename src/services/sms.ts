@@ -34,7 +34,7 @@ const sendSMS = async (to: string, message: string) => {
       to,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     throw err;
   }
 };

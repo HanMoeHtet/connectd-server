@@ -16,7 +16,7 @@ import { compareMongooseIds } from '@src/utils/helpers';
 import {
   prepareBasicProfileResponse,
   prepareProfileResponse,
-} from '@src/utils/profile';
+} from '@src/utils/user';
 import { NextFunction, Response } from 'express';
 
 export const findUser = async (userId?: string, selectOptions?: {}) => {
@@ -112,10 +112,11 @@ interface GetPostsByUserRequest
   }> {}
 export const getPostsByUser = async (
   req: GetPostsByUserRequest,
-  res: Response,
+  res: AuthResponse,
   next: NextFunction
 ) => {
   const { userId } = req.params;
+  const authUser = res.locals.user;
 
   let user;
 
@@ -203,7 +204,7 @@ export const getPostsByUser = async (
       });
 
       const userReactedRection = reactions.find((reaction) =>
-        compareMongooseIds(reaction.userId, userId)
+        compareMongooseIds(reaction.userId, authUser._id)
       );
 
       const { reactionIds, ...rest } = post.toJSON();
@@ -259,7 +260,7 @@ export const show = async (
 
   let authUser = res.locals.user;
 
-  const isAuthUser = compareMongooseIds(userId, authUser._id);
+  const isAuthUser = compareMongooseIds(user._id, authUser._id);
 
   let friendId;
   let sentFriendRequestId;

@@ -24,7 +24,7 @@ export const emitUserOffline = (
   payload: UserOnlineStatusEmitPayload
 ) => {
   io.to(to).emit(`user-online-status`, {
-    status: StatusType.ONLINE,
+    status: StatusType.OFFLINE,
     ...payload,
   });
 };

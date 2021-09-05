@@ -5,12 +5,19 @@ const cache = redis.createClient({
 });
 
 export const init = () =>
-  new Promise<void>(async (resolve, reject) => {
+  new Promise<void>((resolve, reject) => {
+    // Fix for ts-node-dev reloading the app
+    // when the redis client is already connected
+    if (cache.connected) {
+      console.log('Redis already connected');
+      resolve();
+    }
     cache.on('ready', () => {
-      console.log('Redis connected');
+      console.log('Redis ready');
       resolve();
     });
     cache.on('error', (err) => {
+      console.error(err);
       reject(err);
     });
   });

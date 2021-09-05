@@ -4,7 +4,7 @@ import { AuthResponse } from '@src/types/responses';
 import {
   prepareProfileResponse,
   prepareBasicProfileResponse,
-} from '@src/utils/profile';
+} from '@src/utils/user';
 
 export const getProfile = (req: Request, res: AuthResponse) => {
   return res.status(SUCCESS).json({

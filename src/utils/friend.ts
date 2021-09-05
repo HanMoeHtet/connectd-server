@@ -10,6 +10,7 @@ import { UserDocument } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { compareMongooseIds } from './helpers';
 import { findFriendRequestReceivedNotificationByFriendRequestId } from './notification';
+import { filterOnlineUserIds } from './user';
 
 export interface FriendDocumentWithUser extends FriendDocument {
   user: UserDocument;
@@ -438,32 +439,19 @@ export const getFriendUserIdsByUser = async (user: UserDocument) => {
     _id: {
       $in: user.friendIds,
     },
-  })
-    .select({ userIds: 1 })
-    .populate({
-      path: 'users',
-      select: {
-        lastSeenAt: 1,
-      },
-      match: {
-        // Only return users that are online
-        lastSeenAt: {
-          $eq: null,
-          $exists: true,
-        },
-      },
-    })
-    .where({
-      user: {
-        $ne: null,
-      },
-    });
+  }).select({ userIds: 1 });
 
   const friendUserIds: string[] = friends.map((friend) =>
-    compareMongooseIds(friend.userIds[0], user._id)
-      ? friend.userIds[1]
-      : friend.userIds[0]
+    String(
+      compareMongooseIds(friend.userIds[0], user._id)
+        ? friend.userIds[1]
+        : friend.userIds[0]
+    )
   );
 
   return friendUserIds;
+};
+
+export const getOnlineFriendUserIdsByUser = async (user: UserDocument) => {
+  return await filterOnlineUserIds(await getFriendUserIdsByUser(user));
 };

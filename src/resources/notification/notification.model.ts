@@ -1,5 +1,5 @@
 import { model, Schema } from '@src/config/database.config';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { FriendRequestDocument } from '../friend-request/friend-request.model';
 import { UserDocument } from '../user/user.model';
 
@@ -46,11 +46,11 @@ const NotificationSchema = new Schema<Notification>({
     required: true,
   },
   friendRequestId: {
-    type: String,
+    type: Types.ObjectId,
     index: true,
   },
   friendUserId: {
-    type: String,
+    type: Types.ObjectId,
     index: true,
   },
   createdAt: {

@@ -1,6 +1,6 @@
 import { UserDocument } from '../user/user.model';
 import { model, Schema } from '@src/config/database.config';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface FriendRequest {
   senderId: string;
@@ -12,11 +12,11 @@ export interface FriendRequest {
 
 const FriendRequestSchema = new Schema<FriendRequest>({
   senderId: {
-    type: String,
+    type: Types.ObjectId,
     required: true,
   },
   receiverId: {
-    type: String,
+    type: Types.ObjectId,
     required: true,
   },
   createdAt: {

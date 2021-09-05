@@ -1,6 +1,6 @@
 import { UserDocument } from '../user/user.model';
 import { model, Schema } from '@src/config/database.config';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface Friend {
   userIds: [string, string];
@@ -10,7 +10,7 @@ export interface Friend {
 
 const FriendSchema = new Schema<Friend>({
   userIds: {
-    type: [String],
+    type: [Types.ObjectId],
     required: true,
   },
   createdAt: {

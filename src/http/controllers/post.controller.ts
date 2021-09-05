@@ -85,9 +85,6 @@ export const show = async (
     post = prepareShare(post);
   }
 
-  console.log(reactions, res.locals.user._id);
-  console.log(userReactedReaction);
-
   return res.status(SUCCESS).json({
     data: {
       post: {

@@ -5,7 +5,6 @@ import i18next from 'i18next';
   await i18next.init({
     defaultNS: 'common',
     fallbackLng: DEFAULT_LOCALE,
-    debug: process.env.NODE_ENV !== 'production',
     resources: {
       en: {
         common: await import('./en/common.json'),
