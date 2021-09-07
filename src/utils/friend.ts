@@ -10,7 +10,7 @@ import { UserDocument } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
 import { compareMongooseIds } from './helpers';
 import { findFriendRequestReceivedNotificationByFriendRequestId } from './notification';
-import { filterOnlineUserIds } from './user';
+import { filterOnlineUserIds, filterOnlineUsers } from './user';
 
 export interface FriendDocumentWithUser extends FriendDocument {
   user: UserDocument;
@@ -434,11 +434,31 @@ export const canUnfriend = async (
   return true;
 };
 
-export const getFriendUserIdsByUser = async (user: UserDocument) => {
+interface GetFriendUserIdsByUserOptions {
+  notInUserIds?: string[];
+}
+export const getFriendUserIdsByUser = async (
+  user: UserDocument,
+  { notInUserIds }: GetFriendUserIdsByUserOptions = {}
+) => {
   let friends = await FriendModel.find({
-    _id: {
-      $in: user.friendIds,
-    },
+    $and: [
+      {
+        _id: {
+          $in: user.friendIds,
+        },
+      },
+      {
+        userIds: {
+          $eq: user._id,
+        },
+      },
+      {
+        userIds: {
+          $nin: notInUserIds,
+        },
+      },
+    ],
   }).select({ userIds: 1 });
 
   const friendUserIds: string[] = friends.map((friend) =>
@@ -454,4 +474,18 @@ export const getFriendUserIdsByUser = async (user: UserDocument) => {
 
 export const getOnlineFriendUserIdsByUser = async (user: UserDocument) => {
   return await filterOnlineUserIds(await getFriendUserIdsByUser(user));
+};
+
+interface GetOnlineFriendUsersByUserOptions {
+  notInUserIds: string[];
+}
+export const getOnlineFriendUsersByUser = async (
+  user: UserDocument,
+  { notInUserIds }: GetOnlineFriendUsersByUserOptions
+) => {
+  return await filterOnlineUsers(
+    await getFriendUserIdsByUser(user, {
+      notInUserIds,
+    })
+  );
 };

@@ -18,6 +18,8 @@ import {
   findFriend,
   findFriendRequest,
   areUsersFriends as areUsersFriendsFunc,
+  getFriendUserIdsByUser,
+  getOnlineFriendUsersByUser,
 } from '@src/utils/friend';
 import { compareMongooseIds } from '@src/utils/helpers';
 import { findFriendRequestReceivedNotificationByFriendRequestId } from '@src/utils/notification';
@@ -452,4 +454,29 @@ export const unfriend = async (
   await friend.delete();
 
   res.status(SUCCESS).end();
+};
+
+interface GetOnlineFriendsRequest
+  extends Request<{
+    reqBody: {
+      notInUserIds?: string[];
+    };
+  }> {}
+export const getOnlineFriends = async (
+  req: GetOnlineFriendsRequest,
+  res: AuthResponse
+) => {
+  let { notInUserIds } = req.body;
+  notInUserIds = notInUserIds || [];
+  const authUser = res.locals.user;
+
+  const onlineFriendUsers = await getOnlineFriendUsersByUser(authUser, {
+    notInUserIds,
+  });
+
+  res.status(SUCCESS).json({
+    data: {
+      onlineFriends: onlineFriendUsers,
+    },
+  });
 };

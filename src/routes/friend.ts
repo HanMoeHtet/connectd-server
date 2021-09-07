@@ -7,5 +7,6 @@ const router = Router();
 router.use(checkAuth);
 
 router.delete('/:friendId', FriendController.unfriend);
+router.post('/online', FriendController.getOnlineFriends);
 
 export default router;

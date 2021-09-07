@@ -33,3 +33,12 @@ export const filterOnlineUserIds = async (userIds: string[]) => {
 
   return users.map((user) => String(user._id));
 };
+
+export const filterOnlineUsers = async (userIds: string[]) => {
+  const users = await UserModel.find({
+    _id: { $in: userIds },
+    lastSeenAt: { $eq: null, $exists: true },
+  }).select({ username: 1, avatar: 1 });
+
+  return users;
+};
