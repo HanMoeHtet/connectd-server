@@ -8,6 +8,7 @@ import commentRoutes from './comment';
 import replyRoutes from './reply';
 import friendRequestRoutes from './friend-request';
 import friendRoutes from './friend';
+import onlineStatusRoutes from './online-status';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/comments', commentRoutes);
 router.use('/replies', replyRoutes);
 router.use('/friend-requests', friendRequestRoutes);
 router.use('/friends', friendRoutes);
+router.use('/online-status', onlineStatusRoutes);
 
 export default router;
