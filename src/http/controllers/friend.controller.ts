@@ -1,4 +1,9 @@
-import { MAX_POSTS_PER_PAGE, SERVER_ERROR, SUCCESS } from '@src/constants';
+import {
+  MAX_FRIEND_USERS_PER_REQUEST,
+  MAX_POSTS_PER_PAGE,
+  SERVER_ERROR,
+  SUCCESS,
+} from '@src/constants';
 import FriendRequestModel from '@src/resources/friend-request/friend-request.model';
 import FriendModel from '@src/resources/friend/friend.model';
 import NotificationModel, {
@@ -477,6 +482,7 @@ export const getOnlineFriends = async (
   res.status(SUCCESS).json({
     data: {
       onlineFriends: onlineFriendUsers,
+      hasMore: onlineFriendUsers.length === MAX_FRIEND_USERS_PER_REQUEST,
     },
   });
 };

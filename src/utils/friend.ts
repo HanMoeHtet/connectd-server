@@ -1,4 +1,8 @@
-import { BAD_REQUEST, SERVER_ERROR } from '@src/constants';
+import {
+  BAD_REQUEST,
+  MAX_FRIEND_USERS_PER_REQUEST,
+  SERVER_ERROR,
+} from '@src/constants';
 import { RequestError } from '@src/http/error-handlers/handler';
 import FriendRequestModel, {
   FriendRequestDocument,
@@ -436,11 +440,14 @@ export const canUnfriend = async (
 
 interface GetFriendUserIdsByUserOptions {
   notInUserIds?: string[];
+  withLimit?: boolean;
 }
 export const getFriendUserIdsByUser = async (
   user: UserDocument,
-  { notInUserIds }: GetFriendUserIdsByUserOptions = {}
+  { notInUserIds, withLimit }: GetFriendUserIdsByUserOptions = {}
 ) => {
+  const limit = withLimit ? MAX_FRIEND_USERS_PER_REQUEST : 0;
+
   let friends = await FriendModel.find({
     $and: [
       {
@@ -459,7 +466,9 @@ export const getFriendUserIdsByUser = async (
         },
       },
     ],
-  }).select({ userIds: 1 });
+  })
+    .select({ userIds: 1 })
+    .limit(limit);
 
   const friendUserIds: string[] = friends.map((friend) =>
     String(
@@ -486,6 +495,7 @@ export const getOnlineFriendUsersByUser = async (
   return await filterOnlineUsers(
     await getFriendUserIdsByUser(user, {
       notInUserIds,
+      withLimit: true,
     })
   );
 };
