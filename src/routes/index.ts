@@ -9,6 +9,7 @@ import replyRoutes from './reply';
 import friendRequestRoutes from './friend-request';
 import friendRoutes from './friend';
 import onlineStatusRoutes from './online-status';
+import conversationRoutes from './conversation';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/replies', replyRoutes);
 router.use('/friend-requests', friendRequestRoutes);
 router.use('/friends', friendRoutes);
 router.use('/online-status', onlineStatusRoutes);
+router.use('/conversations', conversationRoutes);
 
 export default router;

@@ -1,5 +1,6 @@
-import * as UserController from '@src/http/controllers/user.controller';
 import * as FriendController from '@src/http/controllers/friend.controller';
+import * as UserController from '@src/http/controllers/user.controller';
+import * as ConversationController from '@src/http/controllers/conversation.controller';
 import checkAuth from '@src/http/middlewares/check-auth.middleware';
 import { Router } from 'express';
 
@@ -14,5 +15,10 @@ router.get('/:userId/posts', UserController.getPostsByUser);
 
 router.get('/:userId/friends', FriendController.getFriendsByUser);
 router.post('/:userId/friends', FriendController.createFriendRequest);
+
+router.get(
+  '/:userId/conversation',
+  ConversationController.getConversationWithUser
+);
 
 export default router;

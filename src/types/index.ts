@@ -71,3 +71,11 @@ export interface CreateShareError {
   content?: string[];
   privacy?: string[];
 }
+
+export interface CreateMessageInConversationFormData {
+  content?: string;
+}
+
+export type CreateMessageInConversationError = {
+  [P in keyof CreateMessageInConversationFormData]: CreateMessageInConversationFormData[P][];
+};

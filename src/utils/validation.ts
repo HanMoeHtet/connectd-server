@@ -16,6 +16,8 @@ import { validatePhoneNumber as validateNationalNumber } from '@src/services/sms
 import {
   CreateCommentError,
   CreateCommentFormData,
+  CreateMessageInConversationError,
+  CreateMessageInConversationFormData,
   CreatePostError,
   CreatePostFormData,
   CreateReplyError,
@@ -354,6 +356,25 @@ export const validateCreateShare = async (
 
   for (let key in errors) {
     const error = errors[key as keyof CreateShareError];
+    if (error && error.length) {
+      throw new ValidationError(BAD_REQUEST, errors);
+    }
+  }
+
+  return errors;
+};
+
+export const validateCreateMessageInConversation = async (
+  data: Partial<CreateMessageInConversationFormData>
+): Promise<CreateMessageInConversationError> => {
+  const errors: CreateMessageInConversationError = {};
+
+  const { content } = data;
+
+  errors.content = await validateContent(content, { minLength: 1 });
+
+  for (let key in errors) {
+    const error = errors[key as keyof CreateMessageInConversationError];
     if (error && error.length) {
       throw new ValidationError(BAD_REQUEST, errors);
     }
