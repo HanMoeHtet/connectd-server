@@ -16,6 +16,7 @@ const onConnection = async (socket: AuthSocket) => {
   const socketsSetName = getNameForUserSockets(userId);
 
   socket.join(userId);
+  socket.join(authUser.conversationIds.map(String));
 
   if ((await cache.getSetCount(socketsSetName)) === 0) {
     userOnlineStatusEmitter.emit(

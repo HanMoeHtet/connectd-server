@@ -5,6 +5,7 @@ import ConversationModel, {
 } from '@src/resources/conversation/conversation.model';
 import { UserDocument } from '@src/resources/user/user.model';
 import i18next from '@src/services/i18next';
+import { areUsersFriends } from './friend';
 import { compareMongooseIds } from './helpers';
 
 export const findConversation = async (conversationId?: string) => {
@@ -38,6 +39,10 @@ export const canCreateConversation = async (
 ) => {
   if (compareMongooseIds(userOne._id, userTwo._id)) {
     throw new RequestError(BAD_REQUEST, i18next.t('httpError.400', {}));
+  }
+
+  if (!areUsersFriends(userOne, userTwo)) {
+    throw new RequestError(FORBIDDEN, i18next.t('httpError.403', {}));
   }
 
   return true;

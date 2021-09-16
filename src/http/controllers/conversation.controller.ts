@@ -22,6 +22,14 @@ import { validateCreateMessageInConversation } from '@src/utils/validation';
 import MessageModel from '@src/resources/message/message.model';
 import { findUser } from './user.controller';
 import { UserDocument } from '@src/resources/user/user.model';
+import {
+  conversationEventEmitter,
+  ConversationEventType,
+} from '@src/events/conversation';
+import {
+  messageEventEmitter,
+  MessageEventType,
+} from '@src/events/message.event';
 
 interface GetConversationsWithUserRequest
   extends Request<{
@@ -65,11 +73,30 @@ export const getConversationWithUser = async (
       userIds: [authUser._id, userId],
     });
     await conversation.save();
+
+    authUser.conversationIds.push(conversation._id);
+    await authUser.save();
+
+    user.conversationIds.push(conversation._id);
+    await user.save();
+
+    conversationEventEmitter.emit(
+      ConversationEventType.CONVERSATION_CREATED,
+      conversation
+    );
   }
 
   res.status(SUCCESS).json({
     data: {
-      conversationId: conversation._id,
+      conversation: {
+        _id: conversation._id,
+        userIds: conversation.userIds,
+        user: {
+          _id: user._id,
+          avatar: user.avatar,
+          username: user.username,
+        },
+      },
     },
   });
 };
@@ -143,12 +170,27 @@ export const getMessagesInConversation = async (
     return;
   }
 
-  const hasMore = conversation.messages.length === MAX_MESSAGES_PER_REQUEST;
+  const nextLastMessageId =
+    conversation.messages[conversation.messages.length - 1];
+
+  const hasMore = async () => {
+    const count = await MessageModel.find({
+      _id: {
+        $in: conversation.messageIds,
+        $lt: nextLastMessageId,
+      },
+    })
+      .sort({ createdAt: -1 })
+      .countDocuments();
+    console.log(conversation.messageIds, count);
+
+    return count > 0;
+  };
 
   res.status(SUCCESS).json({
     data: {
       messages: conversation.messages,
-      hasMore,
+      hasMore: await hasMore(),
     },
   });
 };
@@ -196,6 +238,7 @@ export const createMessageInConversation = async (
 
   const message = new MessageModel({
     content,
+    conversationId,
     fromUserId: authUser._id,
   });
   await message.save();
@@ -217,4 +260,6 @@ export const createMessageInConversation = async (
       },
     },
   });
+
+  messageEventEmitter.emit(MessageEventType.MESSAGE_CREATED, message);
 };

@@ -6,7 +6,8 @@ import { PostDocument } from '@src/resources/post/post.model';
 import { ReactionDocument } from '@src/resources/reaction/reaction.model';
 import { ReplyDocument } from '@src/resources/reply/reply.model';
 import { UnverifiedUser } from '@src/resources/unverified-user/unverified-user.model';
-import { Document, Model } from 'mongoose';
+import { Document, Model, Types } from 'mongoose';
+import { ConversationDocument } from '../conversation/conversation.model';
 import { NotificationDocument } from '../notification/notification.model';
 
 export interface User extends UnverifiedUser {
@@ -30,6 +31,8 @@ export interface User extends UnverifiedUser {
   notificationIds: string[];
   notifications?: NotificationDocument[];
   lastSeenAt: Date | null;
+  conversationIds: Types.ObjectId[];
+  conversations?: ConversationDocument[];
 }
 
 const UserSchema = new Schema<User>(
@@ -116,6 +119,12 @@ const UserSchema = new Schema<User>(
       type: Date,
       default: Date.now,
     },
+    conversationIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Conversation',
+      },
+    ],
   },
   { id: false }
 );
@@ -165,6 +174,12 @@ UserSchema.virtual('receivedFriendRequests', {
 UserSchema.virtual('notifications', {
   ref: 'Notification',
   localField: 'notificationIds',
+  foreignField: '_id',
+});
+
+UserSchema.virtual('conversations', {
+  ref: 'Conversation',
+  localField: 'conversationIds',
   foreignField: '_id',
 });
 
