@@ -96,6 +96,7 @@ export const getConversationWithUser = async (
           avatar: user.avatar,
           username: user.username,
         },
+        lastSeenAt: user.lastSeenAt,
       },
     },
   });
