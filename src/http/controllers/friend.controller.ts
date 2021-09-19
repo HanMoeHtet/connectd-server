@@ -22,7 +22,7 @@ import {
   deleteFriendRequestHelper,
   findFriend,
   findFriendRequest,
-  areUsersFriends as areUsersFriendsFunc,
+  getFriendId,
   getFriendUserIdsByUser,
   getOnlineFriendUsersByUser,
 } from '@src/utils/friend';
@@ -105,7 +105,7 @@ export const getFriendsByUser = async (
           avatar: 1,
         });
 
-        const areUsersFriends = areUsersFriendsFunc(authUser, friendUser);
+        const friendId = getFriendId(authUser, friendUser);
 
         const { friendIds, ...rest } = friendUser.toJSON();
 
@@ -116,7 +116,8 @@ export const getFriendsByUser = async (
 
         return {
           ...responseFriend,
-          areUsersFriends,
+          friendId,
+          isAuthUser: compareMongooseIds(authUser._id, friendUser._id)
         };
       })
     );

@@ -10,6 +10,7 @@ import friendRequestRoutes from './friend-request';
 import friendRoutes from './friend';
 import onlineStatusRoutes from './online-status';
 import conversationRoutes from './conversation';
+import searchRoutes from './search';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/friend-requests', friendRequestRoutes);
 router.use('/friends', friendRoutes);
 router.use('/online-status', onlineStatusRoutes);
 router.use('/conversations', conversationRoutes);
+router.use('/search', searchRoutes);
 
 export default router;
