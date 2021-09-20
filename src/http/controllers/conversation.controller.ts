@@ -30,6 +30,7 @@ import {
   messageEventEmitter,
   MessageEventType,
 } from '@src/events/message.event';
+import { compareMongooseIds } from '@src/utils/helpers';
 
 interface GetConversationsWithUserRequest
   extends Request<{
@@ -85,6 +86,57 @@ export const getConversationWithUser = async (
       conversation
     );
   }
+
+  res.status(SUCCESS).json({
+    data: {
+      conversation: {
+        _id: conversation._id,
+        userIds: conversation.userIds,
+        user: {
+          _id: user._id,
+          avatar: user.avatar,
+          username: user.username,
+        },
+        lastSeenAt: user.lastSeenAt,
+      },
+    },
+  });
+};
+
+interface GetConversationRequest
+  extends Request<{
+    params: {
+      conversationId?: string;
+    };
+  }> {}
+
+export const getConversation = async (
+  req: GetConversationRequest,
+  res: AuthResponse,
+  next: NextFunction
+) => {
+  const { conversationId } = req.params;
+  const authUser = res.locals.user;
+
+  let conversation: ConversationDocument;
+  try {
+    conversation = await findConversation(conversationId);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  try {
+    canAccessConversation(authUser, conversation);
+  } catch (e) {
+    next(e);
+    return;
+  }
+
+  const userId = conversation.userIds.find(
+    (userId) => !compareMongooseIds(String(userId), authUser._id)
+  );
+  const user = await findUser(String(userId));
 
   res.status(SUCCESS).json({
     data: {

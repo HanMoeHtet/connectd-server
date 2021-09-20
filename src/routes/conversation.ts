@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(checkAuth);
 
+router.get('/:conversationId', ConversationController.getConversation);
 router.get(
   '/:conversationId/messages',
   ConversationController.getMessagesInConversation
