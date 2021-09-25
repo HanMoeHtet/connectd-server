@@ -17,13 +17,6 @@ import {
 } from './reaction/reaction-in-post.factory';
 import { clearReactionsInReplies } from './reaction/reaction-in-reply';
 import { clearReplies } from './reply/reply.factory';
-import {
-  COMMENT_SIZE,
-  POST_SIZE,
-  REACTION_SIZE,
-  SHARE_SIZE,
-  USER_SIZE,
-} from './seed.config.js';
 import { clearUsers, seedUsers } from './user/user.factory';
 
 const clear = async (session: ClientSession) => {
@@ -41,6 +34,9 @@ const clear = async (session: ClientSession) => {
 };
 
 const seed = async (session: ClientSession, models: string[]) => {
+  const { COMMENT_SIZE, POST_SIZE, REACTION_SIZE, SHARE_SIZE, USER_SIZE } =
+    await import('./seed.config.js');
+
   if (models.length === 0) {
     await seedUsers({ session, size: USER_SIZE });
     await seedPosts({ session, size: POST_SIZE, userCount: USER_SIZE });
