@@ -6,9 +6,9 @@ import PhoneNumberVerification from '@src/resources/phone-number-verification/ph
 import { UnverifiedUserDocument } from '@src/resources/unverified-user/unverified-user.model';
 
 const accountSid =
-  process.env.TWILIO_ACCOUNT_SID! || 'ACc0ce95d9a202822f2e835203dc906bc4';
+  process.env.TWILIO_ACCOUNT_SID!;
 const authToken =
-  process.env.TWILIO_AUTH_TOKEN! || '60b7e9133b843e26e9127337f5a171b0';
+  process.env.TWILIO_AUTH_TOKEN!;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER!;
 const appName = process.env.APP_NAME!;
 
