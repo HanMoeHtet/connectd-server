@@ -35,6 +35,7 @@ const clear = async (session: ClientSession) => {
 
 const seed = async (session: ClientSession, models: string[]) => {
   const { COMMENT_SIZE, POST_SIZE, REACTION_SIZE, SHARE_SIZE, USER_SIZE } =
+    // @ts-ignore
     await import('./seed.config.js');
 
   if (models.length === 0) {
