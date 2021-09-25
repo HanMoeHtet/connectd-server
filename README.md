@@ -7,7 +7,7 @@ Server for [Connectd](https://github.com/HanMoeHtet/connectd) app.
 ### Clone the repo
 
 ```
- git clone https://github.com/HanMoeHtetconnectd-server.git
+ git clone https://github.com/HanMoeHtet/connectd-server.git
 ```
 
 ### Install dependencies
