@@ -22,7 +22,7 @@ export const register = async (
     }
   }
 
-  const { username, phoneNumber, password, birthday, pronouns } = req.body;
+  const { username, phoneNumber, password, birthday } = req.body;
 
   let hashedPassword;
 
@@ -43,7 +43,6 @@ export const register = async (
     phoneNumber,
     password: hashedPassword,
     birthday,
-    pronouns,
   });
 
   try {

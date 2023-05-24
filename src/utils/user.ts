@@ -1,7 +1,7 @@
 import UserModel, { UserDocument } from '@src/resources/user/user.model';
 
 export const prepareProfileResponse = (user: UserDocument) => {
-  const { _id, username, avatar, email, phoneNumber, birthday, pronouns } =
+  const { _id, username, avatar, email, phoneNumber, birthday } =
     user;
 
   return {
@@ -11,7 +11,6 @@ export const prepareProfileResponse = (user: UserDocument) => {
     email,
     phoneNumber,
     birthday,
-    pronouns,
   };
 };
 

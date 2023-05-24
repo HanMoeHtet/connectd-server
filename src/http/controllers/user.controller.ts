@@ -244,7 +244,6 @@ export const show = async (
       email: 1,
       phoneNumber: 1,
       birthday: 1,
-      pronouns: 1,
       avatar: 1,
       postIds: 1,
       friendIds: 1,

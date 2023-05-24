@@ -1,5 +1,4 @@
 import { model, Schema } from '@src/config/database.config';
-import { Pronouns } from '@src/types';
 import { Document, Model } from 'mongoose';
 
 export interface UnverifiedUser {
@@ -8,7 +7,6 @@ export interface UnverifiedUser {
   phoneNumber?: string;
   hash: string;
   birthday: Date;
-  pronouns: Pronouns;
 }
 
 const UnverifiedUserSchema = new Schema<UnverifiedUser>({
@@ -33,12 +31,7 @@ const UnverifiedUserSchema = new Schema<UnverifiedUser>({
   birthday: {
     type: Date,
     required: true,
-  },
-  pronouns: {
-    subjective: { type: String, required: true },
-    objective: { type: String, required: true },
-    possessive: { type: String, required: true },
-  },
+  }
 });
 
 export const UnverifiedUserModel = model<UnverifiedUser>(

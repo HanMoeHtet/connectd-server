@@ -26,7 +26,6 @@ import {
   CreateShareFormData,
   EmailRegistrationFormData,
   PhoneNumberRegistrationFormData,
-  Pronouns,
   RegistrationError,
   RegistrationFormData,
 } from '@src/types';
@@ -168,40 +167,16 @@ export const validateBirthday = async (birthday: Date): Promise<string[]> => {
   return [];
 };
 
-export const validatePronouns = async (
-  pronouns: Pronouns
-): Promise<string[]> => {
-  const field = 'pronouns';
-
-  if (!pronouns) {
-    return [i18next.t('validationError.required_plural', { field })];
-  }
-
-  if (typeof pronouns !== 'object') {
-    return [i18next.t('validationError.invalid_plural', { field })];
-  }
-
-  for (let key in pronouns) {
-    if (!pronouns[key as keyof Pronouns]) {
-      return [i18next.t('validationError.required_plural', { field })];
-    }
-  }
-
-  return [];
-};
-
 export const validateRegistration = async (
   data: RegistrationFormData
 ): Promise<RegistrationError> => {
   const errors: RegistrationError = {};
 
-  const { username, password, birthday, pronouns } = data;
+  const { username, password, birthday } = data;
 
   errors.username = await validateUsername(username);
 
   errors.birthday = await validateBirthday(birthday);
-
-  errors.pronouns = await validatePronouns(pronouns);
 
   return errors;
 };

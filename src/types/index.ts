@@ -1,14 +1,7 @@
-export interface Pronouns {
-  subjective: string;
-  objective: string;
-  possessive: string;
-}
-
 export interface RegistrationFormData {
   username: string;
   password: string;
   birthday: Date;
-  pronouns: Pronouns;
 }
 
 export interface EmailRegistrationFormData extends RegistrationFormData {
@@ -25,7 +18,6 @@ export interface RegistrationError {
   phoneNumber?: string[];
   password?: string[];
   birthday?: string[];
-  pronouns?: string[];
 }
 
 export interface EmailVerificationTokenPayload {

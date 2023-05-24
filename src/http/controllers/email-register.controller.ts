@@ -27,7 +27,7 @@ export const register = async (
     }
   }
 
-  const { username, email, password, birthday, pronouns } = req.body;
+  const { username, email, password, birthday } = req.body;
 
   let hashedPassword;
 
@@ -48,7 +48,6 @@ export const register = async (
     email,
     hash: hashedPassword,
     birthday,
-    pronouns,
   });
 
   try {

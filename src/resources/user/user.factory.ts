@@ -17,11 +17,6 @@ export const seedUser = async ({
     emailVerifiedAt: date.past(),
     birthday: date.past(),
     hash: await hash('password', 10),
-    pronouns: {
-      subjective: ['he', 'she'][gender],
-      objective: ['him', 'her'][gender],
-      possessive: ['his', 'her'][gender],
-    },
   });
 
   await user.save({ session });

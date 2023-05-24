@@ -62,11 +62,6 @@ const UserSchema = new Schema<User>(
       type: Date,
       required: true,
     },
-    pronouns: {
-      subjective: { type: String, required: true },
-      objective: { type: String, required: true },
-      possessive: { type: String, required: true },
-    },
     postIds: [
       {
         type: Schema.Types.ObjectId,
